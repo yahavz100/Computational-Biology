@@ -112,7 +112,7 @@ class Person:
             for j in range(y - 1, y + 2):
                 if i == x and j == y:
                     continue
-                if i >= 0 and j >= 0 and i < SIZE and j < SIZE:
+                if 0 <= i < SIZE and 0 <= j < SIZE:
                     neighbors.append(grid[i][j])
         self.take_decision(neighbors)
 
