@@ -18,6 +18,11 @@ P_S2 = 0.67
 P_S3 = 0.33
 P_S4 = 0.0
 
+S1 = 1
+S2 = 2
+S3 = 3
+S4 = 4
+
 s2_ratio = 0.1
 s3_ratio = 0.3
 s4_ratio = 0.4
@@ -50,6 +55,22 @@ def do_step(persons, grid):
     neighbors = random_person.scan_neighbors(grid)
     random_person.take_decision(neighbors)
     return grid
+
+
+def copy_grid_with_skepticism_levels(grid):
+    """
+    Returns a copy of the input grid with the skepticism level of each person in each cell.
+    """
+    copied_grid = []
+    for row in grid:
+        copied_row = []
+        for person in row:
+            if person is None:
+                copied_row.append(0)
+            else:
+                copied_row.append(person.level_of_skepticism)
+        copied_grid.append(copied_row)
+    return copied_grid
 
 
 # def find_person(i, j, people):
@@ -88,23 +109,23 @@ class Person:
     def take_decision(self, neighbors: List['Person']):
         rumor_received = False
         for neighbor in neighbors:
-            if neighbor:
+            if neighbor is not None:
                 if neighbor.generations_left == 0:
                     # Neighbor can pass on the rumor
-                    if self.level_of_skepticism == "S1":
+                    if self.level_of_skepticism == S1:
                         neighbor.pass_rumor()
                         rumor_received = True
-                    elif self.level_of_skepticism == "S2":
+                    elif self.level_of_skepticism == S2:
                         # If S2, accept rumor with probability of 2/3
                         if self.accept_rumor(2 / 3):
                             neighbor.pass_rumor()
                             rumor_received = True
-                    elif self.level_of_skepticism == "S3":
+                    elif self.level_of_skepticism == S3:
                         # If S3, accept rumor with probability of 1/3
                         if self.accept_rumor(1 / 3):
                             neighbor.pass_rumor()
                             rumor_received = True
-                    elif self.level_of_skepticism == "S4":
+                    elif self.level_of_skepticism == S4:
                         # If S4, never accept the rumor
                         if self.accept_rumor(0):
                             neighbor.pass_rumor()
@@ -114,13 +135,17 @@ class Person:
 
         if rumor_received:
             # Temporarily decrease confidence level if rumor received from at least two neighbors
-            if sum([neighbor.generations_left == 0 for neighbor in neighbors]) >= 2:
-                if self.level_of_skepticism == "S4":
-                    self.level_of_skepticism = "S3"
-                elif self.level_of_skepticism == "S3":
-                    self.level_of_skepticism = "S2"
-                elif self.level_of_skepticism == "S2":
-                    self.level_of_skepticism = "S1"
+            if sum([neighbor is not None and neighbor.generations_left == 0 for neighbor in neighbors]) >= 2:
+                if self.level_of_skepticism is None and all(
+                        [neighbor.level_of_skepticism is None for neighbor in neighbors]):
+                    self.level_of_skepticism = S4
+                elif self.level_of_skepticism == S4:
+                    self.level_of_skepticism = S3
+                elif self.level_of_skepticism == S3:
+                    self.level_of_skepticism = S2
+                elif self.level_of_skepticism == S2:
+                    self.level_of_skepticism = S1
+
             # Set the number of generations left for the rumor to be passed to L
             self.generations_left = L
 
@@ -147,14 +172,26 @@ Draw the cached matrix to the client.
 
 
 def draw_to_client(grid: np.ndarray, people: List[Person]):
-    print(grid)
+    fig, ax = plt.subplots()
+    cmap = c.ListedColormap(['black', 'red', 'blue', 'green'])
+    bounds = [0, 1, 2, 3, 4]
+    norm = c.BoundaryNorm(bounds, cmap.N)
+    grid_to_show = copy_grid_with_skepticism_levels(grid)
+    ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+    plt.show()
+    copygrid = np.copy(grid_to_show)
+
     for i in range(NUM_OF_RUNS):
         do_step(people, grid)
-        print(grid)
+        ax.clear()
+        grid_to_show = copy_grid_with_skepticism_levels(grid)
+        ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+        plt.draw()
+        plt.pause(0.001)
+        if(np.array_equal(copygrid, grid_to_show)):
+            print("DIFF")
 
 
 if __name__ == '__main__':
     n_persons, n_grid = init_persons()
-    print(n_grid)
     draw_to_client(n_grid, n_persons)
-    print(n_persons, n_grid)
