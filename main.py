@@ -116,6 +116,11 @@ class Person:
                     neighbors.append(grid[i][j])
         self.take_decision(neighbors)
 
+    def do_step(self, persons, grid):
+        random_person = random.choice(persons)
+        self.scan_neighbors(random_person, grid)
+        return grid
+
 """
 Draw the cached matrix to the client.
 """
