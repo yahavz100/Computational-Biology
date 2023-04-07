@@ -104,6 +104,17 @@ class Person:
 
         return persons, grid
 
+    def scan_neighbors(self, person, grid):
+        neighbors = []
+        x = person.x
+        y = person.y
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if i == x and j == y:
+                    continue
+                if i >= 0 and j >= 0 and i < SIZE and j < SIZE:
+                    neighbors.append(grid[i][j])
+        self.take_decision(neighbors)
 
 """
 Draw the cached matrix to the client.
