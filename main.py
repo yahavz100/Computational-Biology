@@ -7,7 +7,7 @@ from matplotlib import colors as c
 import numpy as np
 from typing import List
 
-global P
+P = 0.5
 SIZE = 100
 L = 10
 
@@ -20,6 +20,33 @@ P_S4 = 0.0
 s2_ratio = 0.1
 s3_ratio = 0.3
 s4_ratio = 0.4
+
+
+def init_persons():
+    # Define skepticism levels and their corresponding ratios
+    skepticism_levels = [1, 2, 3, 4]
+    skepticism_ratios = [1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio]
+
+    # Create a grid of zeros with the given size
+    grid = np.zeros((SIZE, SIZE))
+
+    # Loop through each cell in the grid and randomly assign a skepticism level to each person
+    persons = []
+    for i in range(SIZE):
+        for j in range(SIZE):
+            if np.random.rand() < P:
+                level_of_skepticism = np.random.choice(skepticism_levels, p=skepticism_ratios)
+                person = Person(i, j, level_of_skepticism)
+                persons.append(person)
+
+    return persons, grid
+
+
+def do_step(persons, grid):
+    random_person = random.choice(persons)
+    neighbors = random_person.scan_neighbors(grid)
+    random_person.take_decision(neighbors)
+    return grid
 
 
 class Person:
@@ -86,29 +113,10 @@ class Person:
     init the list of persons and the grid accordingly
     """
 
-    def init_persons(self):
-        # Define skepticism levels and their corresponding ratios
-        skepticism_levels = [1, 2, 3, 4]
-        skepticism_ratios = [1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio]
-
-        # Create a grid of zeros with the given size
-        grid = np.zeros((SIZE, SIZE))
-
-        # Loop through each cell in the grid and randomly assign a skepticism level to each person
-        persons = []
-        for i in range(SIZE):
-            for j in range(SIZE):
-                if np.random.rand() < P:
-                    level_of_skepticism = np.random.choice(skepticism_levels, p=skepticism_ratios)
-                    person = Person(i, j, level_of_skepticism)
-                    persons.append(person)
-
-        return persons, grid
-
-    def scan_neighbors(self, person, grid):
+    def scan_neighbors(self, grid):
         neighbors = []
-        x = person.x
-        y = person.y
+        x = self.x
+        y = self.y
         for i in range(x - 1, x + 2):
             for j in range(y - 1, y + 2):
                 if i == x and j == y:
@@ -116,12 +124,6 @@ class Person:
                 if 0 <= i < SIZE and 0 <= j < SIZE:
                     neighbors.append(grid[i][j])
         return neighbors
-
-    def do_step(self, persons, grid):
-        random_person = random.choice(persons)
-        neighbors = self.scan_neighbors(random_person, grid)
-        self.take_decision(neighbors)
-        return grid
 
 
 """
@@ -134,4 +136,5 @@ def draw_to_client(matrix: np.ndarray, people: List[Person]):
 
 
 if __name__ == '__main__':
-    print("hello world")
+    n_persons, n_grid = init_persons()
+    print(n_persons, n_grid)
