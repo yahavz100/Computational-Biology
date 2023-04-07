@@ -98,11 +98,15 @@ class Person:
                     if self.accept_rumor(0):
                         neighbor.pass_rumor()
                         rumor_received = True
+            else:
+                neighbor.generations_left = neighbor.generations_left - 1
 
         if rumor_received:
             # Temporarily decrease confidence level if rumor received from at least two neighbors
             if sum([neighbor.generations_left == 0 for neighbor in neighbors]) >= 2:
-                if self.level_of_skepticism == "S3":
+                if self.level_of_skepticism == "S4":
+                    self.level_of_skepticism = "S3"
+                elif self.level_of_skepticism == "S3":
                     self.level_of_skepticism = "S2"
                 elif self.level_of_skepticism == "S2":
                     self.level_of_skepticism = "S1"
