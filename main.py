@@ -1,6 +1,7 @@
 # Yahav Zarfati
 # Noa Miara Levi
 import random
+
 from matplotlib import pyplot as plt
 from matplotlib import colors as c
 import numpy as np
@@ -121,6 +122,7 @@ class Person:
         neighbors = self.scan_neighbors(random_person, grid)
         self.take_decision(neighbors)
         return grid
+
 
 """
 Draw the cached matrix to the client.
