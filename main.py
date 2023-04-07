@@ -114,11 +114,12 @@ class Person:
                     continue
                 if 0 <= i < SIZE and 0 <= j < SIZE:
                     neighbors.append(grid[i][j])
-        self.take_decision(neighbors)
+        return neighbors
 
     def do_step(self, persons, grid):
         random_person = random.choice(persons)
-        self.scan_neighbors(random_person, grid)
+        neighbors = self.scan_neighbors(random_person, grid)
+        self.take_decision(neighbors)
         return grid
 
 """
