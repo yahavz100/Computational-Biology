@@ -1,11 +1,25 @@
 # Yahav Zarfati
 # Noa Miara Levi
 import random
+
+from matplotlib import pyplot as plt
+from matplotlib import colors as c
+import numpy as np
 from typing import List
 
-import numpy as np
-
+global P
+SIZE = 100
 L = 10
+
+# Define the probability of passing on the rumor for each level of skepticism
+P_S1 = 1.0
+P_S2 = 0.67
+P_S3 = 0.33
+P_S4 = 0.0
+
+s2_ratio = 0.1
+s3_ratio = 0.3
+s4_ratio = 0.4
 
 
 class Person:
@@ -67,6 +81,47 @@ class Person:
                     self.level_of_skepticism = "S1"
             # Set the number of generations left for the rumor to be passed to L
             self.generations_left = L
+
+    """
+    init the list of persons and the grid accordingly
+    """
+
+    def init_persons(self):
+        # Define skepticism levels and their corresponding ratios
+        skepticism_levels = [1, 2, 3, 4]
+        skepticism_ratios = [1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio]
+
+        # Create a grid of zeros with the given size
+        grid = np.zeros((SIZE, SIZE))
+
+        # Loop through each cell in the grid and randomly assign a skepticism level to each person
+        persons = []
+        for i in range(SIZE):
+            for j in range(SIZE):
+                if np.random.rand() < P:
+                    level_of_skepticism = np.random.choice(skepticism_levels, p=skepticism_ratios)
+                    person = Person(i, j, level_of_skepticism)
+                    persons.append(person)
+
+        return persons, grid
+
+    def scan_neighbors(self, person, grid):
+        neighbors = []
+        x = person.x
+        y = person.y
+        for i in range(x - 1, x + 2):
+            for j in range(y - 1, y + 2):
+                if i == x and j == y:
+                    continue
+                if 0 <= i < SIZE and 0 <= j < SIZE:
+                    neighbors.append(grid[i][j])
+        return neighbors
+
+    def do_step(self, persons, grid):
+        random_person = random.choice(persons)
+        neighbors = self.scan_neighbors(random_person, grid)
+        self.take_decision(neighbors)
+        return grid
 
 
 """
