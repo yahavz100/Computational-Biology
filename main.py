@@ -46,7 +46,7 @@ def init_persons():
                 person = Person(i, j, level_of_skepticism)
                 grid[i][j] = person
                 persons.append(person)
-    # print(persons.__sizeof__())
+                print(person.level_of_skepticism)
     return persons, grid
 
 
@@ -188,7 +188,7 @@ def draw_to_client(grid: np.ndarray, people: List[Person]):
         grid_to_show = copy_grid_with_skepticism_levels(grid)
         plt.cla()
         cmap = c.ListedColormap(['black', 'red', 'blue', 'green'])
-        bounds = [0, 1, 2, 3, 4]
+        bounds = [0, S1, S2, S3, S4]
         norm = c.BoundaryNorm(bounds, cmap.N)
         plt.pcolormesh(grid_to_show, cmap=cmap, norm=norm)
         plt.pause(0.001)
