@@ -46,7 +46,7 @@ def init_persons():
                 person = Person(i, j, level_of_skepticism)
                 grid[i][j] = person
                 persons.append(person)
-
+    # print(persons.__sizeof__())
     return persons, grid
 
 
@@ -54,6 +54,12 @@ def do_step(persons, grid):
     random_person = random.choice(persons)
     neighbors = random_person.scan_neighbors(grid)
     random_person.take_decision(neighbors)
+    for neighbor in neighbors:
+        new_nei = neighbor.scan_neighbors(grid)
+        neighbor.take_decision(new_nei)
+    for person in persons:
+        new_nei = person.scan_neighbors(grid)
+        person.if_received(new_nei)
     return grid
 
 
@@ -88,6 +94,7 @@ class Person:
         self.y = y
         self.level_of_skepticism = level_of_skepticism
         self.generations_left = 0
+        self.rumor_received = False
 
     def pass_rumor(self):
         # Set the number of generations left for the rumor to be passed to L
@@ -109,33 +116,34 @@ class Person:
     """
 
     def take_decision(self, neighbors: List['Person']):
-        rumor_received = False
+        self.rumor_received = False
         for neighbor in neighbors:
             if neighbor is not None:
                 if neighbor.generations_left == 0:
                     # Neighbor can pass on the rumor
                     if self.level_of_skepticism == S1:
                         neighbor.pass_rumor()
-                        rumor_received = True
+                        self.rumor_received = True
                     elif self.level_of_skepticism == S2:
                         # If S2, accept rumor with probability of 2/3
                         if self.accept_rumor(2 / 3):
                             neighbor.pass_rumor()
-                            rumor_received = True
+                            self.rumor_received = True
                     elif self.level_of_skepticism == S3:
                         # If S3, accept rumor with probability of 1/3
                         if self.accept_rumor(1 / 3):
                             neighbor.pass_rumor()
-                            rumor_received = True
+                            self.rumor_received = True
                     elif self.level_of_skepticism == S4:
                         # If S4, never accept the rumor
                         if self.accept_rumor(0):
                             neighbor.pass_rumor()
-                            rumor_received = True
+                            self.rumor_received = True
                 else:
                     neighbor.generations_left = neighbor.generations_left - 1
 
-        if rumor_received:
+    def if_received(self, neighbors):
+        if self.rumor_received:
             # Temporarily decrease confidence level if rumor received from at least two neighbors
             if sum([neighbor is not None and neighbor.generations_left == 0 for neighbor in neighbors]) >= 2:
                 if self.level_of_skepticism is None and all(
@@ -163,7 +171,7 @@ class Person:
             for j in range(y - 1, y + 2):
                 if i == x and j == y:
                     continue
-                if 0 <= i < SIZE and 0 <= j < SIZE:
+                if 0 <= i < SIZE and 0 <= j < SIZE and grid[i][j] is not None:
                     neighbors.append(grid[i][j])
         return neighbors
 
