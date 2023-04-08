@@ -23,15 +23,15 @@ S2 = 2
 S3 = 3
 S4 = 4
 
-s2_ratio = 0.1
+s2_ratio = 0.4
 s3_ratio = 0.3
-s4_ratio = 0.4
+s4_ratio = 0.1
 
 
 def init_persons():
     # Define skepticism levels and their corresponding ratios
     skepticism_levels = [1, 2, 3, 4]
-    skepticism_ratios = [1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio]
+    skepticism_ratios = [0.02, 0.03, 0.25, 0.7]
 
     # Create a grid of None values with the given size
     grid = np.empty((SIZE, SIZE), dtype=object)
@@ -70,6 +70,8 @@ def copy_grid_with_skepticism_levels(grid):
             else:
                 copied_row.append(person.level_of_skepticism)
         copied_grid.append(copied_row)
+    if np.array_equal(grid, copied_grid):
+        print("DIFF")
     return copied_grid
 
 
@@ -172,24 +174,18 @@ Draw the cached matrix to the client.
 
 
 def draw_to_client(grid: np.ndarray, people: List[Person]):
-    fig, ax = plt.subplots()
-    cmap = c.ListedColormap(['black', 'red', 'blue', 'green'])
-    bounds = [0, 1, 2, 3, 4]
-    norm = c.BoundaryNorm(bounds, cmap.N)
-    grid_to_show = copy_grid_with_skepticism_levels(grid)
-    ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-    plt.show()
-    copygrid = np.copy(grid_to_show)
-
-    for i in range(NUM_OF_RUNS):
+    for i in range(400):
+        # fig, ax = plt.subplots()
         do_step(people, grid)
-        ax.clear()
         grid_to_show = copy_grid_with_skepticism_levels(grid)
-        ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-        plt.draw()
+        plt.cla()
+        cmap = c.ListedColormap(['black', 'red', 'blue', 'green'])
+        bounds = [0, 1, 2, 3, 4]
+        norm = c.BoundaryNorm(bounds, cmap.N)
+        plt.pcolormesh(grid_to_show, cmap=cmap, norm=norm)
         plt.pause(0.001)
-        if(np.array_equal(copygrid, grid_to_show)):
-            print("DIFF")
+
+    plt.cla()
 
 
 if __name__ == '__main__':
