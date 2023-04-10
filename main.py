@@ -6,10 +6,16 @@ from typing import List, Tuple
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import colors as c
+import tkinter as tk
+import matplotlib.pyplot as plt
 
-P: float = 0.5
 SIZE: int = 5
+# global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
+P: float = 0.5
 L: int = 10
+s2_ratio: float = 0.2
+s3_ratio: float = 0.1
+s4_ratio: float = 0.1
 
 # Define the probability of passing on the rumor for each level of skepticism
 P_S2: float = 0.67
@@ -19,10 +25,6 @@ S1: int = 1
 S2: int = 2
 S3: int = 3
 S4: int = 4
-
-s2_ratio: float = 0.2
-s3_ratio: float = 0.1
-s4_ratio: float = 0.1
 
 
 def init_grid() -> Tuple[np.ndarray, List['Person']]:
@@ -76,6 +78,58 @@ def display_grid(grid: np.ndarray) -> None:
     # plt.cla()
 
 
+class UpdateValuesScreen(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+
+        # Create labels for each input field
+        self.p_label = tk.Label(self, text="Enter P value:")
+        self.l_label = tk.Label(self, text="Enter L value:")
+        self.s1_label = tk.Label(self, text="Enter S1 value:")
+        self.s2_label = tk.Label(self, text="Enter S2 value:")
+        self.s3_label = tk.Label(self, text="Enter S3 value:")
+        self.s4_label = tk.Label(self, text="Enter S4 value:")
+
+        # Create entry fields for each input value
+        self.p_entry = tk.Entry(self)
+        self.l_entry = tk.Entry(self)
+        self.s1_entry = tk.Entry(self)
+        self.s2_entry = tk.Entry(self)
+        self.s3_entry = tk.Entry(self)
+        self.s4_entry = tk.Entry(self)
+
+        # Create a button to update the values and display the plot
+        self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
+
+        # Layout the widgets using grid
+        self.p_label.grid(row=0, column=0)
+        self.p_entry.grid(row=0, column=1)
+        self.l_label.grid(row=1, column=0)
+        self.l_entry.grid(row=1, column=1)
+        self.s1_label.grid(row=2, column=0)
+        self.s1_entry.grid(row=2, column=1)
+        self.s2_label.grid(row=3, column=0)
+        self.s2_entry.grid(row=3, column=1)
+        self.s3_label.grid(row=4, column=0)
+        self.s3_entry.grid(row=4, column=1)
+        self.s4_label.grid(row=5, column=0)
+        self.s4_entry.grid(row=5, column=1)
+        self.update_button.grid(row=6, column=0, columnspan=2)
+
+    def update_values(self):
+        global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
+        # Get the values entered by the user
+        P = float(self.p_entry.get())
+        L = float(self.l_entry.get())
+        s1_ratio = float(self.s1_entry.get())
+        s2_ratio = float(self.s2_entry.get())
+        s3_ratio = float(self.s3_entry.get())
+        s4_ratio = float(self.s4_entry.get())
+
+        self.parent.destroy()
+
+
 def main_loop(grid: np.ndarray, persons: list) -> None:
     """
     Simulate the spreading of a rumor throughout the grid.
@@ -83,6 +137,14 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     random_person: Person = random.choice(persons)
     queue = [random_person]
     is_first_person = True
+    # Create the main window and add the UpdateValuesScreen to it
+    root = tk.Tk()
+    update_screen = UpdateValuesScreen(root)
+    update_screen.pack()
+
+    # Start the main event loop
+    root.mainloop()
+    # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
 
     while queue:
 
