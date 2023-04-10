@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib import colors as c
 
 P: float = 0.5
-SIZE: int = 20
+SIZE: int = 5
 L: int = 10
 
 # Define the probability of passing on the rumor for each level of skepticism
