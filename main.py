@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from matplotlib import colors as c
 
 P: float = 0.5
-SIZE: int = 5
+SIZE: int = 20
 L: int = 10
 
 # Define the probability of passing on the rumor for each level of skepticism
@@ -56,7 +56,7 @@ def copy_grid_by_rumors_received(grid: np.ndarray):
     """
     Return a copy of the input grid where each person is represented by the rumor_received attribute.
     """
-    return [[0 if person is None else person.rumor_received for person in row] for row in grid]
+    return [[-1 if person is None else person.rumor_received for person in row] for row in grid]
 
 
 def display_grid(grid: np.ndarray) -> None:
@@ -64,8 +64,8 @@ def display_grid(grid: np.ndarray) -> None:
     Display the grid as an image.
     """
     fig, ax = plt.subplots()
-    cmap = c.ListedColormap(['white', 'yellow', 'red'])
-    bounds = [0, 1, 2, 3]
+    cmap = c.ListedColormap(['white', 'black', 'red'])
+    bounds = [-1, 0, 1, 2]
     norm = c.BoundaryNorm(bounds, cmap.N)
     grid_to_show = copy_grid_by_rumors_received(grid)
     ax.imshow(grid_to_show, cmap=cmap, norm=norm)
