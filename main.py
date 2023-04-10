@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 from matplotlib import colors as c
 import numpy as np
 from typing import List
+import matplotlib.colors as mcolors
+
 
 P = 0.5
 SIZE = 100
@@ -31,7 +33,7 @@ s4_ratio = 0.1
 def init_persons():
     # Define skepticism levels and their corresponding ratios
     skepticism_levels = [1, 2, 3, 4]
-    skepticism_ratios = [0.02, 0.03, 0.25, 0.7]
+    skepticism_ratios = [0.02, 0.03, 0.9, 0.05]
 
     # Create a grid of None values with the given size
     grid = np.empty((SIZE, SIZE), dtype=object)
@@ -46,7 +48,7 @@ def init_persons():
                 person = Person(i, j, level_of_skepticism)
                 grid[i][j] = person
                 persons.append(person)
-                print(person.level_of_skepticism)
+                # print(person.level_of_skepticism)
     return persons, grid
 
 
@@ -182,15 +184,21 @@ Draw the cached matrix to the client.
 
 
 def draw_to_client(grid: np.ndarray, people: List[Person]):
+    # Define a dictionary to map values to colors
+    color_dict = {0: 'white', 1: 'cyan', 2: 'yellow', 3: 'orange', 4: 'red'}
+    grid_colors = np.vectorize(color_dict.get)(grid)
+
     for i in range(400):
         # fig, ax = plt.subplots()
         do_step(people, grid)
         grid_to_show = copy_grid_with_skepticism_levels(grid)
+        # print(grid_to_show)
         plt.cla()
-        cmap = c.ListedColormap(['black', 'red', 'blue', 'green'])
-        bounds = [0, S1, S2, S3, S4]
+        cmap = c.ListedColormap(['white', 'cyan', 'yellow', 'orange', 'red'])      #todo fix colors
+        bounds = [0, S1, S2, S3, S4, 5]
         norm = c.BoundaryNorm(bounds, cmap.N)
         plt.pcolormesh(grid_to_show, cmap=cmap, norm=norm)
+        # plt.colorbar()  # Add a colorbar to the plot
         plt.pause(0.001)
 
     plt.cla()
