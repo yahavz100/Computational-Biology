@@ -1,39 +1,39 @@
 # Yahav Zarfati
 # Noa Miara Levi
-import random
 
+import random
+from typing import List, Tuple
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import colors as c
-import numpy as np
-from typing import List
-import matplotlib.colors as mcolors
 
-
-P = 0.5
-SIZE = 100
-L = 10
-NUM_OF_RUNS = 10
+P: float = 0.5
+SIZE: int = 20
+L: int = 10
 
 # Define the probability of passing on the rumor for each level of skepticism
-P_S1 = 1.0
-P_S2 = 0.67
-P_S3 = 0.33
-P_S4 = 0.0
+P_S2: float = 0.67
+P_S3: float = 0.33
 
-S1 = 1
-S2 = 2
-S3 = 3
-S4 = 4
+S1: int = 1
+S2: int = 2
+S3: int = 3
+S4: int = 4
 
-s2_ratio = 0.4
-s3_ratio = 0.3
-s4_ratio = 0.1
+s2_ratio: float = 0.2
+s3_ratio: float = 0.1
+s4_ratio: float = 0.1
 
 
-def init_persons():
+def init_grid() -> Tuple[np.ndarray, List['Person']]:
+    """
+    Initialize a grid with persons randomly distributed across it and return the grid and persons.
+    Returns:
+    A tuple containing the initialized grid and a list of Person instances.
+    """
     # Define skepticism levels and their corresponding ratios
     skepticism_levels = [1, 2, 3, 4]
-    skepticism_ratios = [0.02, 0.03, 0.9, 0.05]
+    skepticism_ratios = [1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio]
 
     # Create a grid of None values with the given size
     grid = np.empty((SIZE, SIZE), dtype=object)
@@ -48,46 +48,73 @@ def init_persons():
                 person = Person(i, j, level_of_skepticism)
                 grid[i][j] = person
                 persons.append(person)
-                # print(person.level_of_skepticism)
-    return persons, grid
+
+    return grid, persons
 
 
-def do_step(persons, grid):
-    random_person = random.choice(persons)
-    neighbors = random_person.scan_neighbors(grid)
-    random_person.take_decision(neighbors)
-    for neighbor in neighbors:
-        new_nei = neighbor.scan_neighbors(grid)
-        neighbor.take_decision(new_nei)
-    for person in persons:
-        new_nei = person.scan_neighbors(grid)
-        person.if_received(new_nei)
-    return grid
-
-
-def copy_grid_with_skepticism_levels(grid):
+def copy_grid_by_rumors_received(grid: np.ndarray):
     """
-    Returns a copy of the input grid with the skepticism level of each person in each cell.
+    Return a copy of the input grid where each person is represented by the rumor_received attribute.
     """
-    copied_grid = []
-    for row in grid:
-        copied_row = []
-        for person in row:
-            if person is None:
-                copied_row.append(0)
-            else:
-                copied_row.append(person.level_of_skepticism)
-        copied_grid.append(copied_row)
-    if np.array_equal(grid, copied_grid):
-        print("DIFF")
-    return copied_grid
+    return [[-1 if person is None else person.rumor_received for person in row] for row in grid]
 
 
-# def find_person(i, j, people):
-#     for person in people:
-#         if person.x == i and person.y == j:
-#             return person
-#     return None
+def display_grid(grid: np.ndarray) -> None:
+    """
+    Display the grid as an image.
+    """
+    fig, ax = plt.subplots()
+    cmap = c.ListedColormap(['white', 'black', 'red'])
+    bounds = [-1, 0, 1, 2]
+    norm = c.BoundaryNorm(bounds, cmap.N)
+    grid_to_show = copy_grid_by_rumors_received(grid)
+    ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+    plt.show()
+    # plt.draw()
+    plt.pause(0.001)
+
+    # plt.cla()
+
+
+def main_loop(grid: np.ndarray, persons: list) -> None:
+    """
+    Simulate the spreading of a rumor throughout the grid.
+    """
+    random_person: Person = random.choice(persons)
+    queue = [random_person]
+    is_first_person = True
+
+    while queue:
+
+        current_person = queue.pop(0)
+        current_person.decide_if_to_accept_rumor(grid)
+
+        if is_first_person:
+            is_first_person = False
+            current_person.rumor_received = True
+            current_person.generations_left = L
+
+        if current_person.rumor_received:
+            neighbors_list = current_person.scan_neighbors(grid)
+
+            for neighbor in neighbors_list:
+                if neighbor.generations_left == 0:
+                    queue.append(neighbor)
+
+        display_grid(grid)
+
+
+def check_neighbors_rumor(neighbors_list):
+    """
+    Check if there are at least two neighbors that have received the rumor.
+    """
+    rumor_count = 0
+    for neighbor in neighbors_list:
+        if neighbor.rumor_received:
+            rumor_count += 1
+        if rumor_count >= 2:
+            return True
+    return False
 
 
 class Person:
@@ -98,74 +125,10 @@ class Person:
         self.generations_left = 0
         self.rumor_received = False
 
-    def pass_rumor(self):
-        # Set the number of generations left for the rumor to be passed to L
-        self.generations_left = L
-
-    """
-    Person decides whether to accept a rumor based on a probability.
-    Returns True if the person accepts the rumor, False otherwise.
-    """
-
-    def accept_rumor(self, p: float) -> bool:
-        if random.random() < p:
-            return True
-        return False
-
-    """
-    Receives a person and a list of its neighbors, 
-    and decides according to the neighbors the person's temporary level of skepticism.
-    """
-
-    def take_decision(self, neighbors: List['Person']):
-        self.rumor_received = False
-        for neighbor in neighbors:
-            if neighbor is not None:
-                if neighbor.generations_left == 0:
-                    # Neighbor can pass on the rumor
-                    if self.level_of_skepticism == S1:
-                        neighbor.pass_rumor()
-                        self.rumor_received = True
-                    elif self.level_of_skepticism == S2:
-                        # If S2, accept rumor with probability of 2/3
-                        if self.accept_rumor(2 / 3):
-                            neighbor.pass_rumor()
-                            self.rumor_received = True
-                    elif self.level_of_skepticism == S3:
-                        # If S3, accept rumor with probability of 1/3
-                        if self.accept_rumor(1 / 3):
-                            neighbor.pass_rumor()
-                            self.rumor_received = True
-                    elif self.level_of_skepticism == S4:
-                        # If S4, never accept the rumor
-                        if self.accept_rumor(0):
-                            neighbor.pass_rumor()
-                            self.rumor_received = True
-                else:
-                    neighbor.generations_left = neighbor.generations_left - 1
-
-    def if_received(self, neighbors):
-        if self.rumor_received:
-            # Temporarily decrease confidence level if rumor received from at least two neighbors
-            if sum([neighbor is not None and neighbor.generations_left == 0 for neighbor in neighbors]) >= 2:
-                if self.level_of_skepticism is None and all(
-                        [neighbor.level_of_skepticism is None for neighbor in neighbors]):
-                    self.level_of_skepticism = S4
-                elif self.level_of_skepticism == S4:
-                    self.level_of_skepticism = S3
-                elif self.level_of_skepticism == S3:
-                    self.level_of_skepticism = S2
-                elif self.level_of_skepticism == S2:
-                    self.level_of_skepticism = S1
-
-            # Set the number of generations left for the rumor to be passed to L
-            self.generations_left = L
-
-    """
-    init the list of persons and the grid accordingly
-    """
-
-    def scan_neighbors(self, grid):
+    def scan_neighbors(self, grid: np.ndarray) -> list:
+        """
+        Scans the neighbors of the current person and returns a list of neighbors.
+        """
         neighbors = []
         x = self.x
         y = self.y
@@ -177,33 +140,47 @@ class Person:
                     neighbors.append(grid[i][j])
         return neighbors
 
+    def define_level_of_skepticism(self, grid: np.ndarray) -> None:
+        """
+        Check if at least two neighbors of the person has received the rumor and change the level of skepticism accordingly.
+        """
+        neighbors = self.scan_neighbors(grid)
 
-"""
-Draw the cached matrix to the client.
-"""
+        # Check if at least two neighbors has received the rumor
+        if check_neighbors_rumor(neighbors):
+            # Decrease skepticism level based on current level
+            if self.level_of_skepticism == S4:
+                self.level_of_skepticism = S3
+            elif self.level_of_skepticism == S3:
+                self.level_of_skepticism = S2
+            elif self.level_of_skepticism == S2:
+                self.level_of_skepticism = S1
 
+    def decide_if_to_accept_rumor(self, grid):
+        """
+        Decides whether the person should accept the rumor or not.
+        """
+        self.define_level_of_skepticism(grid)
 
-def draw_to_client(grid: np.ndarray, people: List[Person]):
-    # Define a dictionary to map values to colors
-    color_dict = {0: 'white', 1: 'cyan', 2: 'yellow', 3: 'orange', 4: 'red'}
-    grid_colors = np.vectorize(color_dict.get)(grid)
+        if self.level_of_skepticism == S1:
+            self.rumor_received = True
+            self.generations_left = L
+        elif self.level_of_skepticism == S2:
+            if random.random() < P_S2:
+                self.rumor_received = True
+                self.generations_left = L
+        elif self.level_of_skepticism == S3:
+            # If S3, accept rumor with probability of 1/3
+            if random.random() < P_S3:
+                self.rumor_received = True
+                self.generations_left = L
+        elif self.level_of_skepticism == S4:
+            pass
 
-    for i in range(400):
-        # fig, ax = plt.subplots()
-        do_step(people, grid)
-        grid_to_show = copy_grid_with_skepticism_levels(grid)
-        # print(grid_to_show)
-        plt.cla()
-        cmap = c.ListedColormap(['white', 'cyan', 'yellow', 'orange', 'red'])      #todo fix colors
-        bounds = [0, S1, S2, S3, S4, 5]
-        norm = c.BoundaryNorm(bounds, cmap.N)
-        plt.pcolormesh(grid_to_show, cmap=cmap, norm=norm)
-        # plt.colorbar()  # Add a colorbar to the plot
-        plt.pause(0.001)
-
-    plt.cla()
+        else:
+            self.generations_left -= 1
 
 
 if __name__ == '__main__':
-    n_persons, n_grid = init_persons()
-    draw_to_client(n_grid, n_persons)
+    initialized_grid, list_persons = init_grid()
+    main_loop(initialized_grid, list_persons)
