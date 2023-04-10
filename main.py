@@ -83,6 +83,9 @@ class UpdateValuesScreen(tk.Frame):
         super().__init__(parent)
         self.parent = parent
 
+        # Create a label for the title text
+        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:")
+
         # Create labels for each input field
         self.p_label = tk.Label(self, text="Enter P value:")
         self.l_label = tk.Label(self, text="Enter L value:")
@@ -103,19 +106,20 @@ class UpdateValuesScreen(tk.Frame):
         self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
 
         # Layout the widgets using grid
-        self.p_label.grid(row=0, column=0)
-        self.p_entry.grid(row=0, column=1)
-        self.l_label.grid(row=1, column=0)
-        self.l_entry.grid(row=1, column=1)
-        self.s1_label.grid(row=2, column=0)
-        self.s1_entry.grid(row=2, column=1)
-        self.s2_label.grid(row=3, column=0)
-        self.s2_entry.grid(row=3, column=1)
-        self.s3_label.grid(row=4, column=0)
-        self.s3_entry.grid(row=4, column=1)
-        self.s4_label.grid(row=5, column=0)
-        self.s4_entry.grid(row=5, column=1)
-        self.update_button.grid(row=6, column=0, columnspan=2)
+        self.title_label.grid(row=0, column=0, columnspan=2)
+        self.p_label.grid(row=1, column=0)
+        self.p_entry.grid(row=1, column=1)
+        self.l_label.grid(row=2, column=0)
+        self.l_entry.grid(row=2, column=1)
+        self.s1_label.grid(row=3, column=0)
+        self.s1_entry.grid(row=3, column=1)
+        self.s2_label.grid(row=4, column=0)
+        self.s2_entry.grid(row=4, column=1)
+        self.s3_label.grid(row=5, column=0)
+        self.s3_entry.grid(row=5, column=1)
+        self.s4_label.grid(row=6, column=0)
+        self.s4_entry.grid(row=6, column=1)
+        self.update_button.grid(row=7, column=0, columnspan=2)
 
     def update_values(self):
         global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
@@ -139,6 +143,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     is_first_person = True
     # Create the main window and add the UpdateValuesScreen to it
     root = tk.Tk()
+    # root.title("Welcome to Spreading Rumours")
     update_screen = UpdateValuesScreen(root)
     update_screen.pack()
 
