@@ -52,7 +52,7 @@ def init_grid() -> Tuple[np.ndarray, List['Person']]:
     return grid, persons
 
 
-def copy_grid_by_rumors_received(grid: np.ndarray) -> list[list[int]]:
+def copy_grid_by_rumors_received(grid: np.ndarray):
     """
     Return a copy of the input grid where each person is represented by the rumor_received attribute.
     """
