@@ -87,7 +87,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     while queue:
 
         current_person = queue.pop(0)
-        current_person.decide_if_to_accept_rumor()
+        current_person.decide_if_to_accept_rumor(grid)
 
         if is_first_person:
             is_first_person = False
@@ -102,6 +102,19 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                     queue.append(neighbor)
 
         display_grid(grid)
+
+
+def check_neighbors_rumor(neighbors_list):
+    """
+    Check if there are at least two neighbors that have received the rumor.
+    """
+    rumor_count = 0
+    for neighbor in neighbors_list:
+        if neighbor.rumor_received:
+            rumor_count += 1
+        if rumor_count >= 2:
+            return True
+    return False
 
 
 class Person:
@@ -127,10 +140,28 @@ class Person:
                     neighbors.append(grid[i][j])
         return neighbors
 
-    def decide_if_to_accept_rumor(self):
+    def define_level_of_skepticism(self, grid: np.ndarray) -> None:
+        """
+        Check if at least two neighbors of the person has received the rumor and change the level of skepticism accordingly.
+        """
+        neighbors = self.scan_neighbors(grid)
+
+        # Check if at least two neighbors has received the rumor
+        if check_neighbors_rumor(neighbors):
+            # Decrease skepticism level based on current level
+            if self.level_of_skepticism == S4:
+                self.level_of_skepticism = S3
+            elif self.level_of_skepticism == S3:
+                self.level_of_skepticism = S2
+            elif self.level_of_skepticism == S2:
+                self.level_of_skepticism = S1
+
+    def decide_if_to_accept_rumor(self, grid):
         """
         Decides whether the person should accept the rumor or not.
         """
+        self.define_level_of_skepticism(grid)
+
         if self.level_of_skepticism == S1:
             self.rumor_received = True
             self.generations_left = L
