@@ -10,9 +10,9 @@ import matplotlib.colors as mcolors
 
 
 P = 0.5
-SIZE = 20
+SIZE = 100
 L = 10
-NUM_OF_RUNS = 100
+NUM_OF_RUNS = 10
 
 # Define the probability of passing on the rumor for each level of skepticism
 P_S1 = 1.0
@@ -53,17 +53,15 @@ def init_persons():
 
 
 def do_step(persons, grid):
-    neighbors_list = []
     random_person = random.choice(persons)
-    neighbors_list = random_person.scan_neighbors(grid, neighbors_list)
-    random_person.take_decision(neighbors_list)
-    if random_person.take_decision:
-        for neighbor in neighbors_list:
-            new_nei = neighbor.scan_neighbors(grid, neighbors_list)
-            neighbor.take_decision(new_nei)
-        for person in persons:
-            new_nei = person.scan_neighbors(grid, neighbors_list)
-            person.if_received(new_nei)
+    neighbors = random_person.scan_neighbors(grid)
+    random_person.take_decision(neighbors)
+    for neighbor in neighbors:
+        new_nei = neighbor.scan_neighbors(grid)
+        neighbor.take_decision(new_nei)
+    for person in persons:
+        new_nei = person.scan_neighbors(grid)
+        person.if_received(new_nei)
     return grid
 
 
@@ -120,38 +118,29 @@ class Person:
     """
 
     def take_decision(self, neighbors: List['Person']):
-        # self.rumor_received = False
+        self.rumor_received = False
         for neighbor in neighbors:
             if neighbor is not None:
                 if neighbor.generations_left == 0:
-                    # print(neighbors)
                     # Neighbor can pass on the rumor
                     if self.level_of_skepticism == S1:
                         neighbor.pass_rumor()
                         self.rumor_received = True
-                        person_index = neighbors.index(self)
-                        neighbors.pop(person_index)
                     elif self.level_of_skepticism == S2:
                         # If S2, accept rumor with probability of 2/3
                         if self.accept_rumor(2 / 3):
                             neighbor.pass_rumor()
                             self.rumor_received = True
-                            person_index = neighbors.index(self)
-                            neighbors.pop(person_index)
                     elif self.level_of_skepticism == S3:
                         # If S3, accept rumor with probability of 1/3
                         if self.accept_rumor(1 / 3):
                             neighbor.pass_rumor()
                             self.rumor_received = True
-                            person_index = neighbors.index(self)
-                            neighbors.pop(person_index)
                     elif self.level_of_skepticism == S4:
                         # If S4, never accept the rumor
                         if self.accept_rumor(0):
                             neighbor.pass_rumor()
                             self.rumor_received = True
-                            person_index = neighbors.index(self)
-                            neighbors.pop(person_index)
                 else:
                     neighbor.generations_left = neighbor.generations_left - 1
 
@@ -176,7 +165,8 @@ class Person:
     init the list of persons and the grid accordingly
     """
 
-    def scan_neighbors(self, grid, neighbors):
+    def scan_neighbors(self, grid):
+        neighbors = []
         x = self.x
         y = self.y
         for i in range(x - 1, x + 2):
@@ -198,7 +188,7 @@ def draw_to_client(grid: np.ndarray, people: List[Person]):
     color_dict = {0: 'white', 1: 'cyan', 2: 'yellow', 3: 'orange', 4: 'red'}
     grid_colors = np.vectorize(color_dict.get)(grid)
 
-    for i in range(NUM_OF_RUNS):
+    for i in range(400):
         # fig, ax = plt.subplots()
         do_step(people, grid)
         grid_to_show = copy_grid_with_skepticism_levels(grid)
@@ -209,7 +199,7 @@ def draw_to_client(grid: np.ndarray, people: List[Person]):
         norm = c.BoundaryNorm(bounds, cmap.N)
         plt.pcolormesh(grid_to_show, cmap=cmap, norm=norm)
         # plt.colorbar()  # Add a colorbar to the plot
-        plt.pause(1.001)
+        plt.pause(0.001)
 
     plt.cla()
 
