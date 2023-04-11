@@ -72,10 +72,7 @@ def display_grid(grid: np.ndarray) -> None:
     grid_to_show = copy_grid_by_rumors_received(grid)
     ax.imshow(grid_to_show, cmap=cmap, norm=norm)
     plt.show()
-    # plt.draw()
     plt.pause(0.001)
-
-    # plt.cla()
 
 
 class UpdateValuesScreen(tk.Frame):
