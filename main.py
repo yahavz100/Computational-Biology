@@ -9,7 +9,7 @@ from matplotlib import colors as c
 import tkinter as tk
 import matplotlib.pyplot as plt
 
-SIZE: int = 5
+SIZE: int = 100
 # global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
 P: float = 0.5
 L: int = 10
@@ -71,8 +71,11 @@ def display_grid(grid: np.ndarray) -> None:
     norm = c.BoundaryNorm(bounds, cmap.N)
     grid_to_show = copy_grid_by_rumors_received(grid)
     ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+    plt.ion()  # turn on interactive mode
     plt.show()
+    plt.draw()  # force plot to update
     plt.pause(0.001)
+
 
 
 class UpdateValuesScreen(tk.Frame):
@@ -147,7 +150,10 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     # Start the main event loop
     root.mainloop()
     # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
-
+    fig, ax = plt.subplots()
+    cmap = c.ListedColormap(['white', 'black', 'red'])
+    bounds = [-1, 0, 1, 2]
+    norm = c.BoundaryNorm(bounds, cmap.N)
     while queue:
 
         current_person = queue.pop(0)
@@ -165,7 +171,14 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                 if neighbor.generations_left == 0:
                     queue.append(neighbor)
 
-        display_grid(grid)
+        # display_grid(grid)
+
+        grid_to_show = copy_grid_by_rumors_received(grid)
+        ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+        plt.ion()  # turn on interactive mode
+        plt.show()
+        plt.draw()  # force plot to update
+        plt.pause(0.001)
 
 
 def check_neighbors_rumor(neighbors_list):
