@@ -9,7 +9,7 @@ from matplotlib import colors as c
 import tkinter as tk
 import matplotlib.pyplot as plt
 
-SIZE: int = 5
+SIZE: int = 100
 # global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
 P: float = 0.5
 L: int = 10
@@ -61,27 +61,13 @@ def copy_grid_by_rumors_received(grid: np.ndarray):
     return [[-1 if person is None else person.rumor_received for person in row] for row in grid]
 
 
-def display_grid(grid: np.ndarray) -> None:
-    """
-    Display the grid as an image.
-    """
-    fig, ax = plt.subplots()
-    cmap = c.ListedColormap(['white', 'black', 'red'])
-    bounds = [-1, 0, 1, 2]
-    norm = c.BoundaryNorm(bounds, cmap.N)
-    grid_to_show = copy_grid_by_rumors_received(grid)
-    ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-    plt.show()
-    plt.pause(0.001)
-
-
 class UpdateValuesScreen(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.parent = parent
 
         # Create a label for the title text
-        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:")
+        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:", justify="center")
 
         # Create labels for each input field
         self.p_label = tk.Label(self, text="Enter P value:")
@@ -103,20 +89,29 @@ class UpdateValuesScreen(tk.Frame):
         self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
 
         # Layout the widgets using grid
-        self.title_label.grid(row=0, column=0, columnspan=2)
-        self.p_label.grid(row=1, column=0)
-        self.p_entry.grid(row=1, column=1)
-        self.l_label.grid(row=2, column=0)
-        self.l_entry.grid(row=2, column=1)
-        self.s1_label.grid(row=3, column=0)
-        self.s1_entry.grid(row=3, column=1)
-        self.s2_label.grid(row=4, column=0)
-        self.s2_entry.grid(row=4, column=1)
-        self.s3_label.grid(row=5, column=0)
-        self.s3_entry.grid(row=5, column=1)
-        self.s4_label.grid(row=6, column=0)
-        self.s4_entry.grid(row=6, column=1)
-        self.update_button.grid(row=7, column=0, columnspan=2)
+        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10,20))
+        self.p_label.grid(row=1, column=0, padx=20, pady=10)
+        self.p_entry.grid(row=1, column=1, padx=20, pady=10)
+        self.l_label.grid(row=2, column=0, padx=20, pady=10)
+        self.l_entry.grid(row=2, column=1, padx=20, pady=10)
+        self.s1_label.grid(row=3, column=0, padx=20, pady=10)
+        self.s1_entry.grid(row=3, column=1, padx=20, pady=10)
+        self.s2_label.grid(row=4, column=0, padx=20, pady=10)
+        self.s2_entry.grid(row=4, column=1, padx=20, pady=10)
+        self.s3_label.grid(row=5, column=0, padx=20, pady=10)
+        self.s3_entry.grid(row=5, column=1, padx=20, pady=10)
+        self.s4_label.grid(row=6, column=0, padx=20, pady=10)
+        self.s4_entry.grid(row=6, column=1, padx=20, pady=10)
+        self.update_button.grid(row=7, column=0, columnspan=3, pady=20)
+
+        # Add an empty label to fill the bottom right cell of the grid
+        self.bottom_label = tk.Label(self, text="", width=20)
+        self.bottom_label.grid(row=8, column=2, sticky="nsew")
+
+        # Set the last row and column to have a weight of 1
+        self.grid_rowconfigure(8, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+
 
     def update_values(self):
         global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
@@ -138,16 +133,12 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     random_person: Person = random.choice(persons)
     queue = [random_person]
     is_first_person = True
-    # Create the main window and add the UpdateValuesScreen to it
-    root = tk.Tk()
-    # root.title("Welcome to Spreading Rumours")
-    update_screen = UpdateValuesScreen(root)
-    update_screen.pack()
 
-    # Start the main event loop
-    root.mainloop()
     # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
-
+    fig, ax = plt.subplots(figsize=(8, 8))
+    cmap = c.ListedColormap(['white', 'black', 'red'])
+    bounds = [-1, 0, 1, 2]
+    norm = c.BoundaryNorm(bounds, cmap.N)
     while queue:
 
         current_person = queue.pop(0)
@@ -165,7 +156,14 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                 if neighbor.generations_left == 0:
                     queue.append(neighbor)
 
-        display_grid(grid)
+        # display_grid(grid)
+
+        grid_to_show = copy_grid_by_rumors_received(grid)
+        ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+        plt.ion()  # turn on interactive mode
+        plt.show()
+        plt.draw()  # force plot to update
+        plt.pause(0.001)
 
 
 def check_neighbors_rumor(neighbors_list):
@@ -246,5 +244,15 @@ class Person:
 
 
 if __name__ == '__main__':
+    # Create the main window and add the UpdateValuesScreen to it
+    root = tk.Tk()
+    root.geometry("800x800")
+    root.resizable(True, True)
+    # root.title("Welcome to Spreading Rumours")
+    update_screen = UpdateValuesScreen(root)
+    update_screen.pack()
+
+    # Start the main event loop
+    root.mainloop()
     initialized_grid, list_persons = init_grid()
     main_loop(initialized_grid, list_persons)
