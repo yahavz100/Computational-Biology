@@ -135,7 +135,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     is_first_person = True
 
     # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8, 8))
     cmap = c.ListedColormap(['white', 'black', 'red'])
     bounds = [-1, 0, 1, 2]
     norm = c.BoundaryNorm(bounds, cmap.N)
