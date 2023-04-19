@@ -67,7 +67,8 @@ class UpdateValuesScreen(tk.Frame):
         self.parent = parent
 
         # Create a label for the title text
-        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:", justify="center")
+        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:",
+                                    justify="center")
 
         # Create labels for each input field
         self.p_label = tk.Label(self, text="Enter P value:")
@@ -89,7 +90,7 @@ class UpdateValuesScreen(tk.Frame):
         self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
 
         # Layout the widgets using grid
-        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10,20))
+        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
         self.p_label.grid(row=1, column=0, padx=20, pady=10)
         self.p_entry.grid(row=1, column=1, padx=20, pady=10)
         self.l_label.grid(row=2, column=0, padx=20, pady=10)
@@ -111,7 +112,6 @@ class UpdateValuesScreen(tk.Frame):
         # Set the last row and column to have a weight of 1
         self.grid_rowconfigure(8, weight=1)
         self.grid_columnconfigure(2, weight=1)
-
 
     def update_values(self):
         global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
