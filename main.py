@@ -160,10 +160,8 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
 
         grid_to_show = copy_grid_by_rumors_received(grid)
         ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-        plt.ion()  # turn on interactive mode
-        plt.show()
-        plt.draw()  # force plot to update
         plt.pause(0.001)
+    plt.show()
 
 
 def check_neighbors_rumor(neighbors_list):
