@@ -4,12 +4,11 @@
 import random
 from typing import List, Tuple
 import numpy as np
-from matplotlib import pyplot as plt
 from matplotlib import colors as c
 import tkinter as tk
 import matplotlib.pyplot as plt
 
-SIZE: int = 100
+SIZE: int = 13
 # global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
 P: float = 0.5
 L: int = 10
@@ -43,9 +42,10 @@ def init_grid() -> Tuple[np.ndarray, List['Person']]:
 
     # Loop through each cell in the grid and randomly assign a skepticism level to each person
     persons = []
+    toss = np.random.rand() < P
     for i in range(SIZE):
         for j in range(SIZE):
-            if np.random.rand() < P:
+            if toss:
                 level_of_skepticism = np.random.choice(skepticism_levels, p=skepticism_ratios)
                 person = Person(i, j, level_of_skepticism)
                 grid[i][j] = person
@@ -67,7 +67,8 @@ class UpdateValuesScreen(tk.Frame):
         self.parent = parent
 
         # Create a label for the title text
-        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:", justify="center")
+        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:",
+                                    justify="center")
 
         # Create labels for each input field
         self.p_label = tk.Label(self, text="Enter P value:")
@@ -89,7 +90,7 @@ class UpdateValuesScreen(tk.Frame):
         self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
 
         # Layout the widgets using grid
-        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10,20))
+        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
         self.p_label.grid(row=1, column=0, padx=20, pady=10)
         self.p_entry.grid(row=1, column=1, padx=20, pady=10)
         self.l_label.grid(row=2, column=0, padx=20, pady=10)
@@ -112,7 +113,6 @@ class UpdateValuesScreen(tk.Frame):
         self.grid_rowconfigure(8, weight=1)
         self.grid_columnconfigure(2, weight=1)
 
-
     def update_values(self):
         global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
         # Get the values entered by the user
@@ -131,7 +131,8 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     Simulate the spreading of a rumor throughout the grid.
     """
     random_person: Person = random.choice(persons)
-    queue = [random_person]
+    num_generation = 1
+    queue = [(random_person, num_generation)]
     is_first_person = True
 
     # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
@@ -139,10 +140,10 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     cmap = c.ListedColormap(['white', 'black', 'red'])
     bounds = [-1, 0, 1, 2]
     norm = c.BoundaryNorm(bounds, cmap.N)
-    while queue:
 
-        current_person = queue.pop(0)
-        current_person.decide_if_to_accept_rumor(grid)
+    while queue:
+        current_person = queue.pop(0)[0]
+        current_person.decide_if_to_accept_rumor(grid, num_generation)
 
         if is_first_person:
             is_first_person = False
@@ -150,18 +151,35 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
             current_person.generations_left = L
 
         if current_person.rumor_received:
-            neighbors_list = current_person.scan_neighbors(grid)
+            neighbors_list = current_person.scan_neighbors(grid, num_generation)
 
-            for neighbor in neighbors_list:
-                if neighbor.generations_left == 0:
-                    queue.append(neighbor)
+            for neighbor, generation in neighbors_list:
+                queue.append((neighbor, num_generation + 1))
 
-        # display_grid(grid)
-
-        grid_to_show = copy_grid_by_rumors_received(grid)
-        ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-        plt.pause(0.001)
+        if not check_generation(queue, num_generation):
+            grid_to_show = copy_grid_by_rumors_received(grid)
+            ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+            plt.pause(0.001)
+            num_generation += 1
     plt.show()
+
+
+def check_generation(pairs_list, number):
+    """
+    Check if any person in the given list of pairs has the given generation number.
+
+    Args:
+        pairs_list: A list of tuples, where each tuple contains a Person object and an integer representing the person's
+               generation.
+        number: The generation number to check for.
+
+    Returns:
+        True if any person in the list has the given generation number, False otherwise.
+    """
+    for person, generation in pairs_list:
+        if generation == number:
+            return True
+    return False
 
 
 def check_neighbors_rumor(neighbors_list):
@@ -169,7 +187,7 @@ def check_neighbors_rumor(neighbors_list):
     Check if there are at least two neighbors that have received the rumor.
     """
     rumor_count = 0
-    for neighbor in neighbors_list:
+    for neighbor, generation in neighbors_list:
         if neighbor.rumor_received:
             rumor_count += 1
         if rumor_count >= 2:
@@ -185,7 +203,7 @@ class Person:
         self.generations_left = 0
         self.rumor_received = False
 
-    def scan_neighbors(self, grid: np.ndarray) -> list:
+    def scan_neighbors(self, grid: np.ndarray, current_generation: int) -> list:
         """
         Scans the neighbors of the current person and returns a list of neighbors.
         """
@@ -197,14 +215,15 @@ class Person:
                 if i == x and j == y:
                     continue
                 if 0 <= i < SIZE and 0 <= j < SIZE and grid[i][j] is not None:
-                    neighbors.append(grid[i][j])
+                    if grid[i][j].generations_left == 0:
+                        neighbors.append((grid[i][j], current_generation))
         return neighbors
 
-    def define_level_of_skepticism(self, grid: np.ndarray) -> None:
+    def define_level_of_skepticism(self, grid: np.ndarray, current_generation) -> None:
         """
         Check if at least two neighbors of the person has received the rumor and change the level of skepticism accordingly.
         """
-        neighbors = self.scan_neighbors(grid)
+        neighbors = self.scan_neighbors(grid, current_generation)
 
         # Check if at least two neighbors has received the rumor
         if check_neighbors_rumor(neighbors):
@@ -216,11 +235,11 @@ class Person:
             elif self.level_of_skepticism == S2:
                 self.level_of_skepticism = S1
 
-    def decide_if_to_accept_rumor(self, grid):
+    def decide_if_to_accept_rumor(self, grid, current_generation):
         """
         Decides whether the person should accept the rumor or not.
         """
-        self.define_level_of_skepticism(grid)
+        self.define_level_of_skepticism(grid, current_generation)
 
         if self.level_of_skepticism == S1:
             self.rumor_received = True
@@ -230,7 +249,6 @@ class Person:
                 self.rumor_received = True
                 self.generations_left = L
         elif self.level_of_skepticism == S3:
-            # If S3, accept rumor with probability of 1/3
             if random.random() < P_S3:
                 self.rumor_received = True
                 self.generations_left = L
