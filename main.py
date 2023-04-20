@@ -166,6 +166,15 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
 
             # if current_person.rumor_received:
             neighbors_list = current_person.scan_neighbors(grid)
+            #more_nei = []
+
+            #if neighbors_list.__sizeof__() < 5:
+             #   for new_nei in neighbors_list:
+              #      more_nei.append(new_nei.scan_neighbors(grid))
+
+            #for i in more_nei:
+             #   neighbors_list.append(more_nei[i])
+              #  print(more_nei[i])
 
             for neighbor in neighbors_list:
                 if neighbor.generations_left == 0:
@@ -182,6 +191,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                                     queue.append(nei)
 
 
+
         # display_grid(grid)
 
         grid_to_show = copy_grid_by_rumors_received(grid)
@@ -195,7 +205,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     #    plt.clf()  # Clear previous plot
 
         print("num rumor receive:", num_rumor_received)
-
+    print("done")
 
 def check_neighbors_rumor(neighbors_list):
     """
