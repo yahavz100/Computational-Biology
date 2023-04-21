@@ -113,11 +113,10 @@ class UpdateValuesScreen(tk.Frame):
         self.grid_columnconfigure(2, weight=1)
 
     def update_values(self):
-        global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
+        global P, L, s2_ratio, s3_ratio, s4_ratio
         # Get the values entered by the user
         P = float(self.p_entry.get())
         L = float(self.l_entry.get())
-        s1_ratio = float(self.s1_entry.get())
         s2_ratio = float(self.s2_entry.get())
         s3_ratio = float(self.s3_entry.get())
         s4_ratio = float(self.s4_entry.get())
@@ -242,7 +241,8 @@ class Person:
 
     def define_level_of_skepticism(self, grid: np.ndarray) -> None:
         """
-        Check if at least two neighbors of the person has received the rumor and change the level of skepticism accordingly.
+        Check if at least two neighbors of the person has received the rumor and change the level of skepticism
+        accordingly.
         """
         neighbors = self.scan_neighbors(grid)
 
