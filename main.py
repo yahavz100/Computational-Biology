@@ -4,7 +4,6 @@
 import random
 from typing import List, Tuple
 import numpy as np
-from matplotlib import pyplot as plt
 from matplotlib import colors as c
 import tkinter as tk
 import matplotlib.pyplot as plt
@@ -130,17 +129,19 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     """
     Simulate the spreading of a rumor throughout the grid.
     """
-
-    # is_first_person = True
-
-    # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
-
-
+    # Create a new figure and axis for plotting
     fig, ax = plt.subplots(figsize=(8, 8))
+
+    # Define the colors for the grid (white, black, red)
     cmap = c.ListedColormap(['white', 'black', 'red'])
+
+    # Define the boundaries between the different colors
     bounds = [-1, 0, 1, 2]
+
+    # Create a norm object that maps values to colors
     norm = c.BoundaryNorm(bounds, cmap.N)
 
+    # Initialize variables for tracking the number of people who have received the rumor
     num_rumor_received = 0
     random_person: Person = random.choice(persons)
     random_person.rumor_received = True
@@ -148,34 +149,20 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     random_person.generations_left = L
     queue = [random_person]
 
+    # Loop until the rumor has spread to everyone in the network
     while queue:
 
+        # Move all the people in the queue to a temporary queue
         temp_queue = [queue.pop(0)]
-
         while queue:
             temp_queue.append(queue.pop(0))
 
+        # Process each person in the temporary queue
         while temp_queue:
             current_person = temp_queue.pop(0)
-            # current_person.decide_if_to_accept_rumor(grid)
-
-            # if is_first_person:
-            # is_first_person = False
-            # current_person.rumor_received = True
-            # current_person.generations_left = L
-
-            # if current_person.rumor_received:
             neighbors_list = current_person.scan_neighbors(grid)
-            #more_nei = []
 
-            #if neighbors_list.__sizeof__() < 5:
-             #   for new_nei in neighbors_list:
-              #      more_nei.append(new_nei.scan_neighbors(grid))
-
-            #for i in more_nei:
-             #   neighbors_list.append(more_nei[i])
-              #  print(more_nei[i])
-
+            # Check each neighbor to see if they can receive the rumor
             for neighbor in neighbors_list:
                 if neighbor.generations_left == 0:
                     neighbor.decide_if_to_accept_rumor(grid)
@@ -183,6 +170,8 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                         num_rumor_received += 1
                         queue.append(neighbor)
                         nei_list = neighbor.scan_neighbors(grid)
+
+                        # Check each of the neighbor's neighbors to see if they can receive the rumor
                         for nei in nei_list:
                             if nei.generations_left == 0:
                                 nei.decide_if_to_accept_rumor(grid)
@@ -190,22 +179,30 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                                     num_rumor_received += 1
                                     queue.append(nei)
 
-
-
-        # display_grid(grid)
-
+        # Create a new grid to show the current state of the rumor
         grid_to_show = copy_grid_by_rumors_received(grid)
+
+        # Display the grid as an image
         ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-        plt.ion()  # turn on interactive mode
-        plt.show()
-        plt.draw()  # force plot to update
+
+        # Pause briefly to allow the image to be displayed
         plt.pause(0.001)
 
-   #     plt.close()
-    #    plt.clf()  # Clear previous plot
+    show_simulation_complete_popup()
 
-        print("num rumor receive:", num_rumor_received)
-    print("done")
+
+def show_simulation_complete_popup():
+    """
+    Create a popup window indicating that the simulation is complete.
+    """
+    root = tk.Tk()
+    root.title("Simulation Complete")
+    message = tk.Label(root, text="Simulation complete!")
+    message.pack()
+    button = tk.Button(root, text="Close", command=root.destroy)
+    button.pack()
+    root.mainloop()
+
 
 def check_neighbors_rumor(neighbors_list):
     """
@@ -289,7 +286,6 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.geometry("800x800")
     root.resizable(True, True)
-    # root.title("Welcome to Spreading Rumours")
     update_screen = UpdateValuesScreen(root)
     update_screen.pack()
 
