@@ -26,6 +26,20 @@ S3: int = 3
 S4: int = 4
 
 
+def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float]:
+    """
+    Round values in the input array that are very close to zero to zero.
+
+    Args:
+        arr (List[float]): The input array of floats.
+        threshold (float): The threshold value used to determine if a value is close to zero.
+
+    Returns:
+        List[float]: The input array with small values rounded to zero.
+    """
+    return [0 if abs(x) < threshold else x for x in arr]
+
+
 def init_grid() -> Tuple[np.ndarray, List['Person']]:
     """
     Initialize a grid with persons randomly distributed across it and return the grid and persons.
@@ -34,7 +48,7 @@ def init_grid() -> Tuple[np.ndarray, List['Person']]:
     """
     # Define skepticism levels and their corresponding ratios
     skepticism_levels = [1, 2, 3, 4]
-    skepticism_ratios = [1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio]
+    skepticism_ratios = round_small_values([1 - s2_ratio - s3_ratio - s4_ratio, s2_ratio, s3_ratio, s4_ratio])
 
     # Create a grid of None values with the given size
     grid = np.empty((SIZE, SIZE), dtype=object)
@@ -141,10 +155,9 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     norm = c.BoundaryNorm(bounds, cmap.N)
 
     # Initialize variables for tracking the number of people who have received the rumor
-    num_rumor_received = 0
     random_person: Person = random.choice(persons)
     random_person.rumor_received = True
-    num_rumor_received += 1
+    num_rumor_received = 1
     random_person.generations_left = L
     queue = [random_person]
 
