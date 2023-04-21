@@ -67,7 +67,8 @@ class UpdateValuesScreen(tk.Frame):
         self.parent = parent
 
         # Create a label for the title text
-        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:", justify="center")
+        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:",
+                                    justify="center")
 
         # Create labels for each input field
         self.p_label = tk.Label(self, text="Enter P value:")
@@ -89,7 +90,7 @@ class UpdateValuesScreen(tk.Frame):
         self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
 
         # Layout the widgets using grid
-        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10,20))
+        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
         self.p_label.grid(row=1, column=0, padx=20, pady=10)
         self.p_entry.grid(row=1, column=1, padx=20, pady=10)
         self.l_label.grid(row=2, column=0, padx=20, pady=10)
@@ -112,7 +113,6 @@ class UpdateValuesScreen(tk.Frame):
         self.grid_rowconfigure(8, weight=1)
         self.grid_columnconfigure(2, weight=1)
 
-
     def update_values(self):
         global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
         # Get the values entered by the user
@@ -130,31 +130,67 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     """
     Simulate the spreading of a rumor throughout the grid.
     """
-    random_person: Person = random.choice(persons)
-    queue = [random_person]
-    is_first_person = True
+
+    # is_first_person = True
 
     # print(P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio)
+
+
     fig, ax = plt.subplots(figsize=(8, 8))
     cmap = c.ListedColormap(['white', 'black', 'red'])
     bounds = [-1, 0, 1, 2]
     norm = c.BoundaryNorm(bounds, cmap.N)
+
+    num_rumor_received = 0
+    random_person: Person = random.choice(persons)
+    random_person.rumor_received = True
+    num_rumor_received += 1
+    random_person.generations_left = L
+    queue = [random_person]
+
     while queue:
 
-        current_person = queue.pop(0)
-        current_person.decide_if_to_accept_rumor(grid)
+        temp_queue = [queue.pop(0)]
 
-        if is_first_person:
-            is_first_person = False
-            current_person.rumor_received = True
-            current_person.generations_left = L
+        while queue:
+            temp_queue.append(queue.pop(0))
 
-        if current_person.rumor_received:
+        while temp_queue:
+            current_person = temp_queue.pop(0)
+            # current_person.decide_if_to_accept_rumor(grid)
+
+            # if is_first_person:
+            # is_first_person = False
+            # current_person.rumor_received = True
+            # current_person.generations_left = L
+
+            # if current_person.rumor_received:
             neighbors_list = current_person.scan_neighbors(grid)
+            #more_nei = []
+
+            #if neighbors_list.__sizeof__() < 5:
+             #   for new_nei in neighbors_list:
+              #      more_nei.append(new_nei.scan_neighbors(grid))
+
+            #for i in more_nei:
+             #   neighbors_list.append(more_nei[i])
+              #  print(more_nei[i])
 
             for neighbor in neighbors_list:
                 if neighbor.generations_left == 0:
-                    queue.append(neighbor)
+                    neighbor.decide_if_to_accept_rumor(grid)
+                    if neighbor.rumor_received:
+                        num_rumor_received += 1
+                        queue.append(neighbor)
+                        nei_list = neighbor.scan_neighbors(grid)
+                        for nei in nei_list:
+                            if nei.generations_left == 0:
+                                nei.decide_if_to_accept_rumor(grid)
+                                if nei.rumor_received:
+                                    num_rumor_received += 1
+                                    queue.append(nei)
+
+
 
         # display_grid(grid)
 
@@ -165,6 +201,11 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
         plt.draw()  # force plot to update
         plt.pause(0.001)
 
+   #     plt.close()
+    #    plt.clf()  # Clear previous plot
+
+        print("num rumor receive:", num_rumor_received)
+    print("done")
 
 def check_neighbors_rumor(neighbors_list):
     """
