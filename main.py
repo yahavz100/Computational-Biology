@@ -210,6 +210,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
 
         # Display the grid as an image
         ax.imshow(grid_to_show, cmap=cmap, norm=norm)
+        ax.axis('off')
 
         # Pause briefly to allow the image to be displayed
         plt.pause(0.001)
