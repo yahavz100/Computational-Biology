@@ -160,23 +160,36 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     num_rumor_received = 1
     random_person.generations_left = L
     queue = [random_person]
+    visited = set()
+    temp_queue = []
 
     # Loop until the rumor has spread to everyone in the network
     while queue:
 
         # Move all the people in the queue to a temporary queue
-        temp_queue = [queue.pop(0)]
         while queue:
-            temp_queue.append(queue.pop(0))
+            person = queue.pop(0)
+            if person not in visited:
+                visited.add(person)
+                temp_queue.append(person)
+
+        for person in visited:
+            if person.generations_left == 0:
+                person.rumor_received = False
+            else:
+                person.generations_left -= 1
 
         # Process each person in the temporary queue
         while temp_queue:
             current_person = temp_queue.pop(0)
-            neighbors_list = current_person.scan_neighbors(grid)
+            if current_person.rumor_received is False and current_person in visited:
+                visited.remove(current_person)
 
+            neighbors_list = current_person.scan_neighbors(grid)
             # Check each neighbor to see if they can receive the rumor
             for neighbor in neighbors_list:
-                if neighbor.generations_left == 0:
+                if neighbor not in visited and neighbor.generations_left == 0:
+                    # visited.add(neighbor)
                     neighbor.decide_if_to_accept_rumor(grid)
                     if neighbor.rumor_received:
                         num_rumor_received += 1
@@ -185,7 +198,8 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
 
                         # Check each of the neighbor's neighbors to see if they can receive the rumor
                         for nei in nei_list:
-                            if nei.generations_left == 0:
+                            if nei not in visited and nei.generations_left == 0:
+                                # visited.add(nei)
                                 nei.decide_if_to_accept_rumor(grid)
                                 if nei.rumor_received:
                                     num_rumor_received += 1
@@ -273,6 +287,7 @@ class Person:
         """
         Decides whether the person should accept the rumor or not.
         """
+        self.rumor_received = False
         self.define_level_of_skepticism(grid)
 
         if self.level_of_skepticism == S1:
@@ -282,16 +297,23 @@ class Person:
             if random.random() < P_S2:
                 self.rumor_received = True
                 self.generations_left = L
+            else:
+                self.generations_left -= 1
+
+                if self.generations_left < 0:
+                    self.generations_left = 0
         elif self.level_of_skepticism == S3:
             # If S3, accept rumor with probability of 1/3
             if random.random() < P_S3:
                 self.rumor_received = True
                 self.generations_left = L
+            else:
+                self.generations_left -= 1
+
+                if self.generations_left < 0:
+                    self.generations_left = 0
         elif self.level_of_skepticism == S4:
             pass
-
-        else:
-            self.generations_left -= 1
 
 
 if __name__ == '__main__':
