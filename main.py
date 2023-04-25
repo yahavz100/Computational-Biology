@@ -25,6 +25,8 @@ S2: int = 2
 S3: int = 3
 S4: int = 4
 
+saif_b = False
+
 
 def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float]:
     """
@@ -40,6 +42,7 @@ def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float
     return [0 if abs(x) < threshold else x for x in arr]
 
 def special_init_grid():
+    saif_b = True
     pass
 
 def init_grid() -> Tuple[np.ndarray, List['Person']]:
@@ -102,7 +105,8 @@ class UpdateValuesScreen(tk.Frame):
         self.s4_entry = tk.Entry(self)
 
         # Create a button to update the values and display the plot
-        self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
+        self.update_button = tk.Button(self, text="Update Values for saif_a", command=self.update_values)
+        self.update_button_saif_b = tk.Button(self, text="saif_b", command=special_init_grid)
 
         # Layout the widgets using grid
         self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
@@ -118,7 +122,8 @@ class UpdateValuesScreen(tk.Frame):
         self.s3_entry.grid(row=5, column=1, padx=20, pady=10)
         self.s4_label.grid(row=6, column=0, padx=20, pady=10)
         self.s4_entry.grid(row=6, column=1, padx=20, pady=10)
-        self.update_button.grid(row=7, column=0, columnspan=3, pady=20)
+        self.update_button.grid(row=7, column=0, columnspan=2, pady=10)
+        self.update_button_saif_b.grid(row=7, column=1, columnspan=2, pady=10)
 
         # Add an empty label to fill the bottom right cell of the grid
         self.bottom_label = tk.Label(self, text="", width=20)
@@ -329,5 +334,7 @@ if __name__ == '__main__':
 
     # Start the main event loop
     root.mainloop()
-    initialized_grid, list_persons = init_grid()
+
+    if not saif_b:
+        initialized_grid, list_persons = init_grid()
     main_loop(initialized_grid, list_persons)
