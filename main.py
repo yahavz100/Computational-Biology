@@ -39,6 +39,8 @@ def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float
     """
     return [0 if abs(x) < threshold else x for x in arr]
 
+def special_init_grid():
+    pass
 
 def init_grid() -> Tuple[np.ndarray, List['Person']]:
     """
