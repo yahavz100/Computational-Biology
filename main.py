@@ -29,6 +29,9 @@ S4: int = 4
 skepticism_levels = [1, 2, 3, 4]
 saif_b = False
 
+# Set the default simulation speed
+simulation_speed = 0.001
+
 
 def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float]:
     """
@@ -272,7 +275,6 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
             # Check each neighbor to see if they can receive the rumor
             for neighbor in neighbors_list:
                 if neighbor not in visited and neighbor.generations_left == 0:
-                    # visited.add(neighbor)
                     neighbor.decide_if_to_accept_rumor(grid)
                     if neighbor.rumor_received:
                         num_rumor_received += 1
@@ -282,7 +284,6 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
                         # Check each of the neighbor's neighbors to see if they can receive the rumor
                         for nei in nei_list:
                             if nei not in visited and nei.generations_left == 0:
-                                # visited.add(nei)
                                 nei.decide_if_to_accept_rumor(grid)
                                 if nei.rumor_received:
                                     num_rumor_received += 1
@@ -296,9 +297,15 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
         ax.axis('off')
 
         # Pause briefly to allow the image to be displayed
-        plt.pause(0.001)
+        plt.pause(simulation_speed)
 
     show_simulation_complete_popup()
+
+
+# Allow the user to adjust the simulation speed
+def on_speed_change(value):
+    global simulation_speed
+    simulation_speed = value / 100
 
 
 def show_simulation_complete_popup():
