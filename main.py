@@ -12,7 +12,7 @@ SIZE: int = 100
 # global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
 P: float = 0.5
 L: int = 10
-s1_ratio:float = 0
+s1_ratio: float = 0
 s2_ratio: float = 0.2
 s3_ratio: float = 0.1
 s4_ratio: float = 0.1
@@ -165,75 +165,52 @@ class UpdateValuesScreen(tk.Frame):
         self.parent = parent
 
         # Create a label for the title text
-        self.title_label = tk.Label(self, text="Welcome to Spreading Rumours\n Enter the following values:",
-                                    justify="center")
+        self.title_label = tk.Label(self, text="Spreading Rumours", font=("Helvetica", 24, "bold"), pady=20)
 
-        # Create labels for each input field
-        self.p_label = tk.Label(self, text="Enter P value:")
-        self.l_label = tk.Label(self, text="Enter L value:")
-        self.s1_label = tk.Label(self, text="Enter S1 value:")
-        self.s2_label = tk.Label(self, text="Enter S2 value:")
-        self.s3_label = tk.Label(self, text="Enter S3 value:")
-        self.s4_label = tk.Label(self, text="Enter S4 value:")
-
-        # Create entry fields for each input value
-        self.p_entry = tk.Entry(self)
-        self.l_entry = tk.Entry(self)
-        self.s1_entry = tk.Entry(self)
-        self.s2_entry = tk.Entry(self)
-        self.s3_entry = tk.Entry(self)
-        self.s4_entry = tk.Entry(self)
+        # Create labels and entry fields for each input value
+        labels = ["P", "L", "S1", "S2", "S3", "S4"]
+        self.entries = []
+        for i, label in enumerate(labels):
+            label_text = f"Enter {label} value:"
+            label = tk.Label(self, text=label_text, font=("Helvetica", 14), padx=20, pady=10)
+            label.grid(row=i+1, column=0, sticky="w")
+            entry = tk.Entry(self, font=("Helvetica", 14), width=10)
+            entry.grid(row=i+1, column=1, padx=20, pady=10)
+            self.entries.append(entry)
 
         # Create a button to update the values and display the plot
-        self.update_button = tk.Button(self, text="Update Values for saif_a", command=self.update_values)
-        self.update_button_saif_b = tk.Button(self, text="saif_b", command=self.update_saif_b)
+        self.rumor_button = tk.Button(self, text="Start rumor!", font=("Helvetica", 14), command=self.update_values)
+        self.strategy_button = tk.Button(self, text="Our strategy", font=("Helvetica", 14), command=self.update_saif_b)
 
         # Layout the widgets using grid
-        self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
-        self.p_label.grid(row=1, column=0, padx=20, pady=10)
-        self.p_entry.grid(row=1, column=1, padx=20, pady=10)
-        self.l_label.grid(row=2, column=0, padx=20, pady=10)
-        self.l_entry.grid(row=2, column=1, padx=20, pady=10)
-        self.s1_label.grid(row=3, column=0, padx=20, pady=10)
-        self.s1_entry.grid(row=3, column=1, padx=20, pady=10)
-        self.s2_label.grid(row=4, column=0, padx=20, pady=10)
-        self.s2_entry.grid(row=4, column=1, padx=20, pady=10)
-        self.s3_label.grid(row=5, column=0, padx=20, pady=10)
-        self.s3_entry.grid(row=5, column=1, padx=20, pady=10)
-        self.s4_label.grid(row=6, column=0, padx=20, pady=10)
-        self.s4_entry.grid(row=6, column=1, padx=20, pady=10)
-        self.update_button.grid(row=7, column=0, columnspan=2, pady=10)
-        self.update_button_saif_b.grid(row=7, column=1, columnspan=2, pady=10)
-
-        # Add an empty label to fill the bottom right cell of the grid
-        self.bottom_label = tk.Label(self, text="", width=20)
-        self.bottom_label.grid(row=8, column=2, sticky="nsew")
+        self.title_label.grid(row=0, column=0, columnspan=2)
+        self.rumor_button.grid(row=len(labels) + 1, column=0, columnspan=2, pady=20, sticky="s")
+        self.strategy_button.grid(row=len(labels) + 1, column=2, columnspan=2, pady=20, sticky="s")
 
         # Set the last row and column to have a weight of 1
-        self.grid_rowconfigure(8, weight=1)
+        self.grid_rowconfigure(len(labels)+2, weight=1)
         self.grid_columnconfigure(2, weight=1)
 
     def update_saif_b(self):
-        global saif_b
+        global P, L, s2_ratio, s3_ratio, s4_ratio, saif_b
         saif_b = True
-        global P, L, s2_ratio, s3_ratio, s4_ratio
         # Get the values entered by the user
-        P = float(self.p_entry.get())
-        L = float(self.l_entry.get())
-        s2_ratio = float(self.s2_entry.get())
-        s3_ratio = float(self.s3_entry.get())
-        s4_ratio = float(self.s4_entry.get())
+        P = float(self.entries[0].get())
+        L = float(self.entries[1].get())
+        s2_ratio = float(self.entries[3].get())
+        s3_ratio = float(self.entries[4].get())
+        s4_ratio = float(self.entries[5].get())
 
         self.parent.destroy()
 
     def update_values(self):
         global P, L, s2_ratio, s3_ratio, s4_ratio
         # Get the values entered by the user
-        P = float(self.p_entry.get())
-        L = float(self.l_entry.get())
-        s2_ratio = float(self.s2_entry.get())
-        s3_ratio = float(self.s3_entry.get())
-        s4_ratio = float(self.s4_entry.get())
+        P = float(self.entries[0].get())
+        L = float(self.entries[1].get())
+        s2_ratio = float(self.entries[3].get())
+        s3_ratio = float(self.entries[4].get())
+        s4_ratio = float(self.entries[5].get())
 
         self.parent.destroy()
 
@@ -255,7 +232,10 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     norm = c.BoundaryNorm(bounds, cmap.N)
 
     # Initialize variables for tracking the number of people who have received the rumor
-    random_person: Person = random.choice(persons)
+    if saif_b:
+        random_person = next(person for person in persons if person.x == 50 and person.y == 50)
+    else:
+        random_person: Person = random.choice(persons)
     random_person.rumor_received = True
     num_rumor_received = 1
     random_person.generations_left = L
