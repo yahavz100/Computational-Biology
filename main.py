@@ -12,6 +12,7 @@ SIZE: int = 100
 # global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
 P: float = 0.5
 L: int = 10
+s1_ratio:float = 0
 s2_ratio: float = 0.2
 s3_ratio: float = 0.1
 s4_ratio: float = 0.1
@@ -48,14 +49,6 @@ def distance(point):
 
 
 def special_init_grid():
-    global P, L, s2_ratio, s3_ratio, s4_ratio
-
-    P = 0.6
-    L = 5
-    s1_ratio = 0.3
-    s2_ratio = 0.35
-    s3_ratio = 0.2
-    s4_ratio = 0.15
 
     # Create a grid of None values with the given size
     grid = np.empty((SIZE, SIZE), dtype=object)
@@ -222,8 +215,15 @@ class UpdateValuesScreen(tk.Frame):
 
     def update_saif_b(self):
         global saif_b
-        print("in update saif b")
         saif_b = True
+        global P, L, s2_ratio, s3_ratio, s4_ratio
+        # Get the values entered by the user
+        P = float(self.p_entry.get())
+        L = float(self.l_entry.get())
+        s2_ratio = float(self.s2_entry.get())
+        s3_ratio = float(self.s3_entry.get())
+        s4_ratio = float(self.s4_entry.get())
+
         self.parent.destroy()
 
     def update_values(self):
