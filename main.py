@@ -25,6 +25,9 @@ S2: int = 2
 S3: int = 3
 S4: int = 4
 
+skepticism_levels = [1, 2, 3, 4]
+saif_b = False
+
 
 def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float]:
     """
@@ -38,6 +41,95 @@ def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float
         List[float]: The input array with small values rounded to zero.
     """
     return [0 if abs(x) < threshold else x for x in arr]
+
+
+def distance(point):
+    return ((point[0] - 50) ** 2 + (point[1] - 50) ** 2) ** 0.5
+
+
+def special_init_grid():
+    global P, L, s2_ratio, s3_ratio, s4_ratio
+
+    P = 0.6
+    L = 5
+    s1_ratio = 0.3
+    s2_ratio = 0.35
+    s3_ratio = 0.2
+    s4_ratio = 0.15
+
+    # Create a grid of None values with the given size
+    grid = np.empty((SIZE, SIZE), dtype=object)
+    persons = []
+
+    center_x, center_y = SIZE // 2, SIZE // 2
+    first_quart = int(0.25 * SIZE)
+    third_quart = int(0.75 * SIZE)
+
+    # create a list of all possible locations of the grid
+    center_locations = [(x, y) for x in range(center_x - first_quart, center_x + first_quart + 1)
+                        for y in range(center_y - first_quart, center_y + first_quart + 1)]
+
+    outskirts_locations = [(x, y) for x in range(0, first_quart)
+                           for y in range(0, SIZE)]
+
+    outskirts_locations.extend([(x, y) for x in range(third_quart + 1, SIZE)
+                                for y in range(0, SIZE)])
+
+    outskirts_locations.extend([(x, y) for x in range(first_quart, third_quart + 1)
+                                for y in range(0, first_quart)])
+
+    outskirts_locations.extend([(x, y) for x in range(first_quart, third_quart + 1)
+                                for y in range(third_quart + 1, SIZE)])
+
+    center_locations = sorted(center_locations, key=lambda point: distance(point))
+    outskirts_locations = sorted(outskirts_locations, key=lambda point: distance(point))
+    outskirts_locations.reverse()
+
+    # Place S1 people
+    s1_count = int(s1_ratio * P * SIZE * SIZE)
+    for i in range(s1_count):
+        if center_locations:
+            x, y = center_locations.pop()
+        else:
+            x, y = outskirts_locations.pop()
+        person = Person(x, y, 1)
+        grid[x, y] = person
+        persons.append(person)
+
+    # Place S2 people
+    s2_count = int(s2_ratio * P * SIZE * SIZE)
+    for i in range(s2_count):
+        if center_locations:
+            x, y = center_locations.pop()
+        else:
+            x, y = outskirts_locations.pop()
+        person = Person(x, y, 2)
+        grid[x, y] = person
+        persons.append(person)
+
+    # Place S3 people
+    s3_count = int(s3_ratio * P * SIZE * SIZE)
+    for i in range(s3_count):
+        if center_locations:
+            x, y = center_locations.pop()
+        else:
+            x, y = outskirts_locations.pop()
+        person = Person(x, y, 3)
+        grid[x, y] = person
+        persons.append(person)
+
+    # Place S4 people
+    s4_count = int(s4_ratio * P * SIZE * SIZE)
+    for i in range(s4_count):
+        if center_locations:
+            x, y = center_locations.pop()
+        else:
+            x, y = outskirts_locations.pop()
+        person = Person(x, y, 4)
+        grid[x, y] = person
+        persons.append(person)
+
+    return grid, persons
 
 
 def init_grid() -> Tuple[np.ndarray, List['Person']]:
@@ -100,7 +192,8 @@ class UpdateValuesScreen(tk.Frame):
         self.s4_entry = tk.Entry(self)
 
         # Create a button to update the values and display the plot
-        self.update_button = tk.Button(self, text="Update Values", command=self.update_values)
+        self.update_button = tk.Button(self, text="Update Values for saif_a", command=self.update_values)
+        self.update_button_saif_b = tk.Button(self, text="saif_b", command=self.update_saif_b)
 
         # Layout the widgets using grid
         self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
@@ -116,7 +209,8 @@ class UpdateValuesScreen(tk.Frame):
         self.s3_entry.grid(row=5, column=1, padx=20, pady=10)
         self.s4_label.grid(row=6, column=0, padx=20, pady=10)
         self.s4_entry.grid(row=6, column=1, padx=20, pady=10)
-        self.update_button.grid(row=7, column=0, columnspan=3, pady=20)
+        self.update_button.grid(row=7, column=0, columnspan=2, pady=10)
+        self.update_button_saif_b.grid(row=7, column=1, columnspan=2, pady=10)
 
         # Add an empty label to fill the bottom right cell of the grid
         self.bottom_label = tk.Label(self, text="", width=20)
@@ -125,6 +219,12 @@ class UpdateValuesScreen(tk.Frame):
         # Set the last row and column to have a weight of 1
         self.grid_rowconfigure(8, weight=1)
         self.grid_columnconfigure(2, weight=1)
+
+    def update_saif_b(self):
+        global saif_b
+        print("in update saif b")
+        saif_b = True
+        self.parent.destroy()
 
     def update_values(self):
         global P, L, s2_ratio, s3_ratio, s4_ratio
@@ -325,7 +425,14 @@ if __name__ == '__main__':
     update_screen = UpdateValuesScreen(root)
     update_screen.pack()
 
+    # Update the window to show the contents
+    root.update()
+
     # Start the main event loop
     root.mainloop()
-    initialized_grid, list_persons = init_grid()
+
+    if saif_b:
+        initialized_grid, list_persons = special_init_grid()
+    else:
+        initialized_grid, list_persons = init_grid()
     main_loop(initialized_grid, list_persons)
