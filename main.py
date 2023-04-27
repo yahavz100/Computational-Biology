@@ -52,7 +52,6 @@ def distance(point):
 
 
 def special_init_grid():
-
     # Create a grid of None values with the given size
     grid = np.empty((SIZE, SIZE), dtype=object)
     persons = []
@@ -178,9 +177,9 @@ class UpdateValuesScreen(tk.Frame):
         for i, label in enumerate(labels):
             label_text = f"Enter {label} value:"
             label = tk.Label(self, text=label_text, font=("Helvetica", 14), padx=20, pady=10)
-            label.grid(row=i+1, column=0, sticky="w")
+            label.grid(row=i + 1, column=0, sticky="w")
             entry = tk.Entry(self, font=("Helvetica", 14), width=10)
-            entry.grid(row=i+1, column=1, padx=20, pady=10)
+            entry.grid(row=i + 1, column=1, padx=20, pady=10)
             entry.insert(0, str(default_vals[i]))
             self.entries.append(entry)
 
@@ -194,8 +193,14 @@ class UpdateValuesScreen(tk.Frame):
         self.strategy_button.grid(row=len(labels) + 1, column=2, columnspan=2, pady=20, sticky="s")
 
         # Set the last row and column to have a weight of 1
-        self.grid_rowconfigure(len(labels)+2, weight=1)
+        self.grid_rowconfigure(len(labels) + 2, weight=1)
         self.grid_columnconfigure(2, weight=1)
+
+        # Add speed slider
+        speed_slider = tk.Scale(self, from_=1, to=100, orient="horizontal", length=200, label="Simulation Speed",
+                                command=on_speed_change)
+        speed_slider.set(10)  # set the default speed to 10%
+        speed_slider.grid(row=len(labels) + 2, column=0, columnspan=2, pady=20)
 
     def update_saif_b(self):
         global P, L, s2_ratio, s3_ratio, s4_ratio, saif_b
@@ -227,6 +232,7 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
     """
     # Create a new figure and axis for plotting
     fig, ax = plt.subplots(figsize=(8, 8))
+    ax.axis('off')
 
     # Define the colors for the grid (white, black, red)
     cmap = c.ListedColormap(['white', 'black', 'red'])
@@ -294,7 +300,6 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
 
         # Display the grid as an image
         ax.imshow(grid_to_show, cmap=cmap, norm=norm)
-        ax.axis('off')
 
         # Pause briefly to allow the image to be displayed
         plt.pause(simulation_speed)
@@ -303,9 +308,9 @@ def main_loop(grid: np.ndarray, persons: list) -> None:
 
 
 # Allow the user to adjust the simulation speed
-def on_speed_change(value):
+def on_speed_change(value_str):
     global simulation_speed
-    simulation_speed = value / 100
+    simulation_speed = float(value_str) / 100
 
 
 def show_simulation_complete_popup():
