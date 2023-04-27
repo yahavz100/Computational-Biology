@@ -10,12 +10,12 @@ import matplotlib.pyplot as plt
 
 SIZE: int = 100
 # global P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio
-P: float = 0.5
-L: int = 10
-s1_ratio: float = 0
-s2_ratio: float = 0.2
-s3_ratio: float = 0.1
-s4_ratio: float = 0.1
+P: float = 0.6
+L: int = 5
+s1_ratio: float = 0.3
+s2_ratio: float = 0.35
+s3_ratio: float = 0.2
+s4_ratio: float = 0.15
 
 # Define the probability of passing on the rumor for each level of skepticism
 P_S2: float = 0.67
@@ -169,6 +169,8 @@ class UpdateValuesScreen(tk.Frame):
 
         # Create labels and entry fields for each input value
         labels = ["P", "L", "S1", "S2", "S3", "S4"]
+        default_vals = [P, L, s1_ratio, s2_ratio, s3_ratio, s4_ratio]
+
         self.entries = []
         for i, label in enumerate(labels):
             label_text = f"Enter {label} value:"
@@ -176,6 +178,7 @@ class UpdateValuesScreen(tk.Frame):
             label.grid(row=i+1, column=0, sticky="w")
             entry = tk.Entry(self, font=("Helvetica", 14), width=10)
             entry.grid(row=i+1, column=1, padx=20, pady=10)
+            entry.insert(0, str(default_vals[i]))
             self.entries.append(entry)
 
         # Create a button to update the values and display the plot
