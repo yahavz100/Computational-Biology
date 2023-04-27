@@ -25,10 +25,8 @@ S2: int = 2
 S3: int = 3
 S4: int = 4
 
-
 skepticism_levels = [1, 2, 3, 4]
 saif_b = False
-
 
 
 def round_small_values(arr: List[float], threshold: float = 1e-12) -> List[float]:
@@ -134,7 +132,6 @@ def special_init_grid():
     return grid, persons
 
 
-
 def init_grid() -> Tuple[np.ndarray, List['Person']]:
     """
     Initialize a grid with persons randomly distributed across it and return the grid and persons.
@@ -196,7 +193,7 @@ class UpdateValuesScreen(tk.Frame):
 
         # Create a button to update the values and display the plot
         self.update_button = tk.Button(self, text="Update Values for saif_a", command=self.update_values)
-        self.update_button_saif_b = tk.Button(self, text="saif_b", command=special_init_grid)
+        self.update_button_saif_b = tk.Button(self, text="saif_b", command=self.update_saif_b)
 
         # Layout the widgets using grid
         self.title_label.grid(row=0, column=0, columnspan=3, pady=(10, 20))
@@ -222,6 +219,12 @@ class UpdateValuesScreen(tk.Frame):
         # Set the last row and column to have a weight of 1
         self.grid_rowconfigure(8, weight=1)
         self.grid_columnconfigure(2, weight=1)
+
+    def update_saif_b(self):
+        global saif_b
+        print("in update saif b")
+        saif_b = True
+        self.parent.destroy()
 
     def update_values(self):
         global P, L, s2_ratio, s3_ratio, s4_ratio
@@ -422,9 +425,12 @@ if __name__ == '__main__':
     update_screen = UpdateValuesScreen(root)
     update_screen.pack()
 
+    # Update the window to show the contents
+    root.update()
+
     # Start the main event loop
     root.mainloop()
-    
+
     if saif_b:
         initialized_grid, list_persons = special_init_grid()
     else:
