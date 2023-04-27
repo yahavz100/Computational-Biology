@@ -189,8 +189,8 @@ class UpdateValuesScreen(tk.Frame):
 
         # Layout the widgets using grid
         self.title_label.grid(row=0, column=0, columnspan=2)
-        self.rumor_button.grid(row=len(labels) + 1, column=0, columnspan=2, pady=20, sticky="s")
-        self.strategy_button.grid(row=len(labels) + 1, column=2, columnspan=2, pady=20, sticky="s")
+        self.rumor_button.grid(row=len(labels) + 2, column=0, columnspan=1, pady=20, sticky="s")
+        self.strategy_button.grid(row=len(labels) + 2, column=1, columnspan=2, pady=20, padx=20, sticky="s")
 
         # Set the last row and column to have a weight of 1
         self.grid_rowconfigure(len(labels) + 2, weight=1)
@@ -200,7 +200,7 @@ class UpdateValuesScreen(tk.Frame):
         speed_slider = tk.Scale(self, from_=1, to=100, orient="horizontal", length=200, label="Simulation Speed",
                                 command=on_speed_change)
         speed_slider.set(10)  # set the default speed to 10%
-        speed_slider.grid(row=len(labels) + 2, column=0, columnspan=2, pady=20)
+        speed_slider.grid(row=len(labels) + 1, column=0, columnspan=2, pady=20)
 
     def update_saif_b(self):
         global P, L, s2_ratio, s3_ratio, s4_ratio, saif_b
