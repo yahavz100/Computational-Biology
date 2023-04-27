@@ -203,6 +203,7 @@ class UpdateValuesScreen(tk.Frame):
 
     def update_saif_b(self):
         global P, L, s2_ratio, s3_ratio, s4_ratio, saif_b
+
         saif_b = True
         # Get the values entered by the user
         P = float(self.entries[0].get())
