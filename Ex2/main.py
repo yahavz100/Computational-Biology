@@ -38,7 +38,16 @@ def load_letter_pair_frequencies(filename: str) -> dict:
     """
     Load letter pair frequencies from a file and return them as a dictionary.
     """
-    pass
+    freq_dict = {}
+    with open(filename, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:
+                if line == '#REF!':
+                    continue
+                freq, pair = line.split()
+                freq_dict[pair] = float(freq)
+    return freq_dict
 
 
 def calculate_letter_pair_frequencies(text: str) -> dict:
@@ -75,3 +84,5 @@ if __name__ == '__main__':
     print(letter_freq)
     given_letter_freq = load_letter_frequencies('Letter_Freq.txt')
     print(given_letter_freq)
+    given_letter_pairs_freq = load_letter_pair_frequencies('Letter2_Freq.txt')
+    print(given_letter_pairs_freq)
