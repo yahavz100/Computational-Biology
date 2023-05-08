@@ -2,7 +2,9 @@ def load_text(filename: str) -> str:
     """
     Load text from a file and return it as a string.
     """
-    pass
+    with open(filename, 'r') as file:
+        text = file.read()
+    return text
 
 
 def calculate_letter_frequencies(text: str) -> dict:
@@ -55,4 +57,5 @@ def decrypt_text(ciphertext: str, key: dict) -> str:
 
 
 if __name__ == '__main__':
-    print("hey")
+    text_str = load_text('enc.txt')
+    print(text_str)
