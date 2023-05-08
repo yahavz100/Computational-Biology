@@ -1,3 +1,6 @@
+NUM_LETTERS_ENGLISH_ALPHABET = 26
+
+
 def load_text(filename: str) -> str:
     """
     Load text from a file and return it as a string.
@@ -67,9 +70,15 @@ def calculate_letter_pair_frequencies(text: str) -> dict:
 
 def guess_key_letter(letter_frequency: dict, target_frequency: dict) -> str:
     """
-    Guess the letter that maps to the highest frequency letter in the target frequency, based on the provided letter frequency.
+    Guess the letter that maps to the highest frequency letter in the target frequency, based on the provided letter
+    frequency.
     """
-    pass
+    max_target_freq = max(target_frequency.values())
+    target_letter = [letter for letter, freq in target_frequency.items() if freq == max_target_freq][0]
+    max_letter_freq = max(letter_frequency.values())
+    letter = [letter for letter, freq in letter_frequency.items() if freq == max_letter_freq][0]
+    key_letter = chr((ord(target_letter) - ord(letter)) % NUM_LETTERS_ENGLISH_ALPHABET + ord('a'))
+    return key_letter
 
 
 def guess_key_letters(pair_frequency: dict, target_frequency: dict, dict_file: str) -> dict:
@@ -96,4 +105,6 @@ if __name__ == '__main__':
     print(given_letter_pairs_freq)
     encrypted_letter_pair_freq = calculate_letter_pair_frequencies(encrypted_text)
     print(encrypted_letter_pair_freq)
+    result = guess_key_letter(encrypted_letter_freq, given_letter_freq)
+    print(result)
 
