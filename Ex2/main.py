@@ -54,7 +54,15 @@ def calculate_letter_pair_frequencies(text: str) -> dict:
     """
     Calculate the frequency of each pair of letters in the given text and return the result as a dictionary.
     """
-    pass
+    frequencies = {}
+    for i in range(len(text) - 1):
+        pair = text[i:i+2].lower()
+        if pair.isalpha():
+            frequencies[pair] = frequencies.get(pair, 0) + 1
+    total_pairs = sum(frequencies.values())
+    for pair, count in frequencies.items():
+        frequencies[pair] = count / total_pairs
+    return frequencies
 
 
 def guess_key_letter(letter_frequency: dict, target_frequency: dict) -> str:
@@ -79,10 +87,13 @@ def decrypt_text(ciphertext: str, key: dict) -> str:
 
 
 if __name__ == '__main__':
-    text_str = load_text('enc.txt')
-    letter_freq = calculate_letter_frequencies(text_str)
-    print(letter_freq)
+    encrypted_text = load_text('enc.txt')
+    encrypted_letter_freq = calculate_letter_frequencies(encrypted_text)
+    print(encrypted_letter_freq)
     given_letter_freq = load_letter_frequencies('Letter_Freq.txt')
     print(given_letter_freq)
     given_letter_pairs_freq = load_letter_pair_frequencies('Letter2_Freq.txt')
     print(given_letter_pairs_freq)
+    encrypted_letter_pair_freq = calculate_letter_pair_frequencies(encrypted_text)
+    print(encrypted_letter_pair_freq)
+
