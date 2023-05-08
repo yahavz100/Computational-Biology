@@ -11,7 +11,15 @@ def calculate_letter_frequencies(text: str) -> dict:
     """
     Calculate the frequency of each letter in the given text and return the result as a dictionary.
     """
-    pass
+    freq = {}
+    for char in text:
+        if char.isalpha():
+            char = char.lower()
+            freq[char] = freq.get(char, 0) + 1
+    total_chars = sum(freq.values())
+    for char in freq:
+        freq[char] /= total_chars
+    return freq
 
 
 def load_letter_frequencies(filename: str) -> dict:
@@ -58,4 +66,5 @@ def decrypt_text(ciphertext: str, key: dict) -> str:
 
 if __name__ == '__main__':
     text_str = load_text('enc.txt')
-    print(text_str)
+    letter_freq = calculate_letter_frequencies(text_str)
+    print(letter_freq)
