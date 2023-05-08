@@ -1,3 +1,5 @@
+import string
+
 NUM_LETTERS_ENGLISH_ALPHABET = 26
 
 
@@ -81,10 +83,7 @@ def guess_key_letter(letter_frequency: dict, target_frequency: dict) -> str:
     return key_letter
 
 
-def guess_key_letters(pair_frequency: dict, target_frequency: dict, dict_file: str) -> dict:
-    """
-    Guess the key letters that map to the most frequent letter pairs in the target frequency, based on the provided pair frequency and a dictionary file.
-    """
+def guess_key_letters(encrypted_letter_pair: dict, given_letter_pairs: dict, dictionary_file: str, encrypt_text: str):
     pass
 
 
@@ -92,19 +91,30 @@ def decrypt_text(ciphertext: str, key: dict) -> str:
     """
     Decrypt the ciphertext using the provided key and return the result as a string.
     """
-    pass
+    plaintext = ""
+    for i in range(len(ciphertext)):
+        if ciphertext[i] in key:
+            # If the current character is a key letter, replace it with its corresponding plaintext letter
+            plaintext += key[ciphertext[i]]
+        else:
+            # Otherwise, leave the character unchanged
+            plaintext += ciphertext[i]
+    return plaintext
+
+
+def get_nth_letters(text: str, start: int, n: int) -> str:
+    """
+    Return a string containing every nth letter in the given text starting from the given index.
+    """
+    return ''.join(text[start::n])
 
 
 if __name__ == '__main__':
     encrypted_text = load_text('enc.txt')
     encrypted_letter_freq = calculate_letter_frequencies(encrypted_text)
-    print(encrypted_letter_freq)
     given_letter_freq = load_letter_frequencies('Letter_Freq.txt')
-    print(given_letter_freq)
     given_letter_pairs_freq = load_letter_pair_frequencies('Letter2_Freq.txt')
-    print(given_letter_pairs_freq)
     encrypted_letter_pair_freq = calculate_letter_pair_frequencies(encrypted_text)
-    print(encrypted_letter_pair_freq)
-    result = guess_key_letter(encrypted_letter_freq, given_letter_freq)
-    print(result)
+    guessed_letter = guess_key_letter(encrypted_letter_freq, given_letter_freq)
+    print(guessed_letter)
 
