@@ -91,17 +91,6 @@ def guess_key_letters(encrypted_letter: dict, encrypted_letter_pair: dict, given
     for letter in encrypted_letter:
         conversion_dict[letter] = list(given_letter.keys())[list(encrypted_letter.keys()).index(letter)]
     print(conversion_dict)
-
-    # print(fitness_function(conversion_dict, encrypt_text, given_letter, given_letter_pairs_freq))
-
-    # plain_text = ""
-    # for letter in encrypted_text:
-    #     if letter in conversion_dict:
-    #         plain_text += conversion_dict[letter]
-    #     else:
-    #         plain_text += letter
-
-    # print(plain_text)
     return 1
 
 
@@ -155,6 +144,16 @@ def calculate_fitness(decrypted_text: str, given_letter_frequencies: dict, given
     # print(fitness)
 
     return fitness
+
+
+def check_unique_values(dictionary):
+    values = list(dictionary.values())
+    if len(set(values)) == len(values):
+        print("All keys have different values.")
+        return True
+
+    print("Some keys have the same value.")
+    return False
 
 
 def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, english_word_set,
@@ -225,11 +224,14 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
                 child = mutation_function(child)
             next_population.append(child)
         population = next_population
-        print(generation)
+        print("Generation:", generation)
+        # print("Best fitness scores:", fitness_scores)
+        print("Best decryption key:", population[fitness_scores.index(max(fitness_scores))])
+        check_unique_values(population[fitness_scores.index(max(fitness_scores))])
 
     # Return the decryption key with the highest fitness score
     fitness_scores = [fitness_function(key) for key in population]
-    print(fitness_scores)
+    print("Fitness scores:", fitness_scores)
     best_key = population[fitness_scores.index(max(fitness_scores))]
     return best_key
 
@@ -245,92 +247,7 @@ if __name__ == '__main__':
     print(given_letter_pairs_freq)
     print(encrypted_letter_pair_freq)
     words = load_english_words('dict.txt')
-    key = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words)
+    key = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 50)
     print(key)
     print(decrypt_text(encrypted_text, key))
-    # guessed_letter = guess_key_letter(encrypted_letter_freq, given_letter_freq)
-    # print(guessed_letter)
-    # words = load_english_words('dict.txt')
-    # result = guess_key_letters(encrypted_letter_freq, encrypted_letter_pair_freq, given_letter_freq,
-    #                            given_letter_pairs_freq, 'dict.txt', encrypted_text)
-    # print(result)
 
-# def fitness_function(decryption_key: dict, text: str, letter_freq: dict, letter_pair_freq: dict) -> float:
-#     """
-#     Evaluate the fitness of the given decryption key by comparing its letter and letter pair frequencies to those of the English language.
-#
-#     Returns a float value between 0 and 1, where 1 is a perfect match with English letter and letter pair frequencies.
-#     """
-#     plaintext = decrypt_text(text, decryption_key)
-#
-#     # Calculate the frequency of each letter pair in the plaintext
-#     pair_freq = calculate_letter_pair_frequencies(plaintext)
-#
-#     # Calculate the fitness as the sum of the absolute differences between the frequencies of each letter and letter
-#     # pair in the plaintext and those of English
-#     fitness = 0.0
-#     for letter, freq in letter_freq.items():
-#         fitness += abs(plaintext.count(letter) / len(plaintext) - freq)
-#     for pair, freq in letter_pair_freq.items():
-#         fitness += abs(pair_freq.get(pair, 0) - freq)
-#
-#     # Normalize the fitness to a value between 0 and 1
-#     fitness /= (len(letter_freq) + len(letter_pair_freq))
-#
-#     return 1 - fitness
-
-
-# def guess_key_letter(letter_frequency: dict, target_frequency: dict) -> str:
-#     """
-#     Guess the letter that maps to the highest frequency letter in the target frequency, based on the provided letter
-#     frequency.
-#     """
-#     max_target_freq = max(target_frequency.values())
-#     target_letter = [letter for letter, freq in target_frequency.items() if freq == max_target_freq][0]
-#     max_letter_freq = max(letter_frequency.values())
-#     letter = [letter for letter, freq in letter_frequency.items() if freq == max_letter_freq][0]
-#     key_letter = chr((ord(target_letter) - ord(letter)) % NUM_LETTERS_ENGLISH_ALPHABET + ord('a'))
-#     return key_letter
-
-
-# def guess_key_letters(encrypted_letter_pair, given_letter_pair, dictionary_file, encrypt_text):
-#     # Convert dictionary_file into a set of words
-#     with open(dictionary_file, 'r') as f:
-#         words = set(f.read().splitlines())
-#
-#     key_letters = {}
-#
-#     # Iterate over all pairs of letters in the encrypted text
-#     for pair in encrypted_letter_pair:
-#         # If the pair is not in the given_letter_pair dictionary, skip it
-#         if pair not in given_letter_pair:
-#             continue
-#
-#         # Get the list of possible letters that could represent this pair
-#         possible_letters = []
-#         for letter in given_letter_pair.keys():
-#             if letter in encrypted_letter_pair:
-#                 possible_letters.append(letter)
-#
-#         # If there is only one possible letter, assign it to the pair
-#         if len(possible_letters) == 1:
-#             key_letters[pair] = possible_letters[0]
-#
-#         # If there are multiple possible letters, use the dictionary file to choose the most likely one
-#         elif len(possible_letters) > 1:
-#             max_count = 0
-#             max_letter = ''
-#             for letter in possible_letters:
-#                 # Replace the pair in the encrypted text with the letter and count the number of words that appear
-#                 decrypted_text = encrypt_text.replace(pair, letter)
-#                 count = sum([1 for word in decrypted_text.split() if word.lower() in words])
-#
-#                 # If this letter produces more valid words than the previous best, update max_count and max_letter
-#                 if count > max_count:
-#                     max_count = count
-#                     max_letter = letter
-#
-#             # Assign the most likely letter to the pair
-#             key_letters[pair] = max_letter
-#
-#     return key_letters
