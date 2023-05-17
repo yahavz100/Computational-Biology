@@ -190,9 +190,11 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
     # Define the mutation function
     def mutation_function(key):
         new_key = dict(key)
+        letters = list(new_key.keys())
         for _ in range(random.randint(1, 5)):
-            letter1, letter2 = random.sample(new_key.keys(), 2)
+            letter1, letter2 = random.sample(letters, 2)
             new_key[letter1], new_key[letter2] = new_key[letter2], new_key[letter1]
+
         return new_key
 
     # Initialize the population with random decryption keys
@@ -206,8 +208,10 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
 
     # Run the genetic algorithm for the specified number of generations
     for generation in range(num_generations):
+
         # Evaluate the fitness of each decryption key in the population
-        fitness_scores = [fitness_function(key) for key in population]
+        # Add a small positive value to all fitness scores to ensure they are strictly positive
+        fitness_scores = [fitness_function(key) + 1e-10 for key in population]
 
         # Select the best decryption keys to breed the next generation
         breeding_population = []
