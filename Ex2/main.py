@@ -276,7 +276,7 @@ if __name__ == '__main__':
 
         # Start the timer
         start_time = time.time()
-        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 100, 200, 0.3)
+        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 100, 100, 0.3)
 
         # Calculate the elapsed time
         elapsed_time = time.time() - start_time
