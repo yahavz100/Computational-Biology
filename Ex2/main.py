@@ -276,5 +276,5 @@ if __name__ == '__main__':
         avg += score
         print(key)
         print(decrypt_text(encrypted_text, key))
-    print("avg score:", avg)
+    print("avg score:", avg/10)
 
