@@ -1,5 +1,6 @@
 import string
 import random
+import time
 
 NUM_LETTERS_ENGLISH_ALPHABET = 26
 
@@ -149,10 +150,10 @@ def calculate_fitness(decrypted_text: str, given_letter_frequencies: dict, given
 def check_unique_values(dictionary):
     values = list(dictionary.values())
     if len(set(values)) == len(values):
-        print("All keys have different values.")
+        # print("All keys have different values.")
         return True
 
-    print("Some keys have the same value.")
+    # print("Some keys have the same value.")
     return False
 
 
@@ -272,9 +273,23 @@ if __name__ == '__main__':
     words = load_english_words('dict.txt')
     avg = 0
     for i in range(10):
-        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 1000, 100, 0.1)
+
+        # Start the timer
+        start_time = time.time()
+        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 100, 200, 0.3)
+
+        # Calculate the elapsed time
+        elapsed_time = time.time() - start_time
+
+        # Convert elapsed time to MM:SS format
+        minutes = int(elapsed_time // 60)
+        seconds = int(elapsed_time % 60)
+        time_formatted = "{:02d}:{:02d}".format(minutes, seconds)
         avg += score
         print(key)
         print(decrypt_text(encrypted_text, key))
+        print(i)
+        # Print the elapsed time in MM:SS format
+        print("Elapsed time: " + time_formatted)
     print("avg score:", avg/10)
 
