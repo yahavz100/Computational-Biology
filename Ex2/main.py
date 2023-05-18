@@ -246,15 +246,17 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
             next_population.append(child)
         population = next_population
         print("Generation:", generation)
-        # print("Best fitness scores:", fitness_scores)
-        print("Best decryption key:", population[fitness_scores.index(max(fitness_scores))])
         check_unique_values(population[fitness_scores.index(max(fitness_scores))])
 
     # Return the decryption key with the highest fitness score
     fitness_scores = [fitness_function(key) for key in population]
-    print("Fitness scores:", fitness_scores)
-    best_key = population[fitness_scores.index(max(fitness_scores))]
-    return best_key
+    best_index = fitness_scores.index(max(fitness_scores))
+    best_key = population[best_index]
+    best_fitness_score = fitness_scores[best_index]
+
+    print("Best decryption key:", best_key)
+    print("Best fitness score:", best_fitness_score)
+    return best_key, best_fitness_score
 
 
 if __name__ == '__main__':
@@ -268,7 +270,11 @@ if __name__ == '__main__':
     print(given_letter_pairs_freq)
     print(encrypted_letter_pair_freq)
     words = load_english_words('dict.txt')
-    key = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 50, 200, 0.01)
-    print(key)
-    print(decrypt_text(encrypted_text, key))
+    avg = 0
+    for i in range(10):
+        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 1000, 100, 0.1)
+        avg += score
+        print(key)
+        print(decrypt_text(encrypted_text, key))
+    print("avg score:", avg)
 
