@@ -1,5 +1,6 @@
 import string
 import random
+import time
 
 NUM_LETTERS_ENGLISH_ALPHABET = 26
 
@@ -149,10 +150,10 @@ def calculate_fitness(decrypted_text: str, given_letter_frequencies: dict, given
 def check_unique_values(dictionary):
     values = list(dictionary.values())
     if len(set(values)) == len(values):
-        print("All keys have different values.")
+        # print("All keys have different values.")
         return True
 
-    print("Some keys have the same value.")
+    # print("Some keys have the same value.")
     return False
 
 
@@ -206,12 +207,29 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
         random.shuffle(list(key.values()))
         population.append(key)
 
+    convergence_limit = 10  # Maximum number of generations without improvement
+    best_fitness = -float('inf')  # Variable to store the best fitness score
+    generations_without_improvement = 0
+
     # Run the genetic algorithm for the specified number of generations
     for generation in range(num_generations):
 
         # Evaluate the fitness of each decryption key in the population
         # Add a small positive value to all fitness scores to ensure they are strictly positive
         fitness_scores = [fitness_function(key) + 1e-10 for key in population]
+
+        # Update the best fitness score
+        current_best_fitness = max(fitness_scores)
+        if current_best_fitness > best_fitness:
+            best_fitness = current_best_fitness
+            generations_without_improvement = 0
+        else:
+            generations_without_improvement += 1
+
+        # Check for convergence
+        if generations_without_improvement >= convergence_limit:
+            print("Reached converge limit, breaking")
+            break
 
         # Select the best decryption keys to breed the next generation
         breeding_population = []
@@ -229,15 +247,17 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
             next_population.append(child)
         population = next_population
         print("Generation:", generation)
-        # print("Best fitness scores:", fitness_scores)
-        print("Best decryption key:", population[fitness_scores.index(max(fitness_scores))])
         check_unique_values(population[fitness_scores.index(max(fitness_scores))])
 
     # Return the decryption key with the highest fitness score
     fitness_scores = [fitness_function(key) for key in population]
-    print("Fitness scores:", fitness_scores)
-    best_key = population[fitness_scores.index(max(fitness_scores))]
-    return best_key
+    best_index = fitness_scores.index(max(fitness_scores))
+    best_key = population[best_index]
+    best_fitness_score = fitness_scores[best_index]
+
+    print("Best decryption key:", best_key)
+    print("Best fitness score:", best_fitness_score)
+    return best_key, best_fitness_score
 
 
 if __name__ == '__main__':
@@ -251,7 +271,25 @@ if __name__ == '__main__':
     print(given_letter_pairs_freq)
     print(encrypted_letter_pair_freq)
     words = load_english_words('dict.txt')
-    key = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 50)
-    print(key)
-    print(decrypt_text(encrypted_text, key))
+    avg = 0
+    for i in range(10):
+
+        # Start the timer
+        start_time = time.time()
+        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 100, 100, 0.3)
+
+        # Calculate the elapsed time
+        elapsed_time = time.time() - start_time
+
+        # Convert elapsed time to MM:SS format
+        minutes = int(elapsed_time // 60)
+        seconds = int(elapsed_time % 60)
+        time_formatted = "{:02d}:{:02d}".format(minutes, seconds)
+        avg += score
+        print(key)
+        print(decrypt_text(encrypted_text, key))
+        print(i)
+        # Print the elapsed time in MM:SS format
+        print("Elapsed time: " + time_formatted)
+    print("avg score:", avg/10)
 
