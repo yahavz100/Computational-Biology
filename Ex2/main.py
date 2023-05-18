@@ -206,12 +206,29 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
         random.shuffle(list(key.values()))
         population.append(key)
 
+    convergence_limit = 10  # Maximum number of generations without improvement
+    best_fitness = -float('inf')  # Variable to store the best fitness score
+    generations_without_improvement = 0
+
     # Run the genetic algorithm for the specified number of generations
     for generation in range(num_generations):
 
         # Evaluate the fitness of each decryption key in the population
         # Add a small positive value to all fitness scores to ensure they are strictly positive
         fitness_scores = [fitness_function(key) + 1e-10 for key in population]
+
+        # Update the best fitness score
+        current_best_fitness = max(fitness_scores)
+        if current_best_fitness > best_fitness:
+            best_fitness = current_best_fitness
+            generations_without_improvement = 0
+        else:
+            generations_without_improvement += 1
+
+        # Check for convergence
+        if generations_without_improvement >= convergence_limit:
+            print("Reached converge limit, breaking")
+            break
 
         # Select the best decryption keys to breed the next generation
         breeding_population = []
@@ -251,7 +268,7 @@ if __name__ == '__main__':
     print(given_letter_pairs_freq)
     print(encrypted_letter_pair_freq)
     words = load_english_words('dict.txt')
-    key = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 50)
+    key = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 50, 200, 0.01)
     print(key)
     print(decrypt_text(encrypted_text, key))
 
