@@ -123,7 +123,7 @@ def load_english_words(filename: str) -> set:
 
 
 def calculate_fitness(decrypted_text: str, given_letter_frequencies: dict, given_letter_pair_frequencies: dict,
-                      english_words: set) -> float:
+                      english_words: set, decryption_key: dict) -> float:
     """
     Calculate the fitness of a given key based on the letter frequencies in the decrypted text.
     """
@@ -135,13 +135,17 @@ def calculate_fitness(decrypted_text: str, given_letter_frequencies: dict, given
     fitness = 0
     for letter, freq in letter_freqs.items():
         expected_freq = given_letter_frequencies.get(letter, 0)
-        fitness += abs(expected_freq - freq)
+        fitness -= abs(expected_freq - freq)
     for pair, freq in letter_pair_freqs.items():
         expected_freq = given_letter_pair_frequencies.get(pair, 0)
-        fitness += abs(expected_freq - freq)
+        fitness -= abs(expected_freq - freq)
     words = decrypted_text.split()
+
     num_english_words = sum(1 for word in words if word in english_words)
-    fitness += num_english_words * 10  # Arbitrary weighting for English words
+    fitness += num_english_words * 100  # Arbitrary weighting for English words
+    if check_unique_values(decryption_key):
+        fitness += 10
+
     # print(fitness)
 
     return fitness
@@ -176,16 +180,25 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
     # Define the fitness function
     def fitness_function(decryption_key):
         plaintext = decrypt_text(ciphertext, decryption_key)
-        return calculate_fitness(plaintext, given_letter_freq, given_letter_pair_freq, english_word_set)
+        return calculate_fitness(plaintext, given_letter_freq, given_letter_pair_freq, english_word_set, decryption_key)
 
     # Define the crossover function
     def crossover_function(key1, key2):
         new_key = {}
-        for letter in key1:
-            if random.random() < 0.5:
-                new_key[letter] = key1[letter]
-            else:
-                new_key[letter] = key2[letter]
+        crossover_point = random.randint(1, len(key1) - 1)
+
+        # Combine the first part of parent1 with the shuffled second part of parent2
+        for i in range(crossover_point):
+            letter = list(key1.keys())[i]
+            new_key[letter] = key1[letter]
+
+        shuffled_key2 = list(key2.values())
+        random.shuffle(shuffled_key2)
+
+        for i in range(crossover_point, len(key2)):
+            letter = list(key2.keys())[i]
+            new_key[letter] = shuffled_key2[i]
+
         return new_key
 
     # Define the mutation function
@@ -207,9 +220,10 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
         random.shuffle(list(key.values()))
         population.append(key)
 
-    convergence_limit = 10  # Maximum number of generations without improvement
-    best_fitness = -float('inf')  # Variable to store the best fitness score
+    convergence_limit = 25  # Maximum number of generations without improvement
     generations_without_improvement = 0
+    best_key = None
+    best_fitness = -float('inf')
 
     # Run the genetic algorithm for the specified number of generations
     for generation in range(num_generations):
@@ -218,9 +232,14 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
         # Add a small positive value to all fitness scores to ensure they are strictly positive
         fitness_scores = [fitness_function(key) + 1e-10 for key in population]
 
-        # Update the best fitness score
+        # Update the best key and its fitness score
         current_best_fitness = max(fitness_scores)
+        current_best_index = fitness_scores.index(current_best_fitness)
+        current_best_key = population[current_best_index]
+        current_best_fitness = fitness_scores[current_best_index]
+
         if current_best_fitness > best_fitness:
+            best_key = current_best_key
             best_fitness = current_best_fitness
             generations_without_improvement = 0
         else:
@@ -246,6 +265,11 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
                 child = mutation_function(child)
             next_population.append(child)
         population = next_population
+
+        # Replace the worst key with the best key from the previous generation (elitism)
+        if best_key is not None:
+            worst_index = fitness_scores.index(min(fitness_scores))
+            population[worst_index] = best_key
         print("Generation:", generation)
         check_unique_values(population[fitness_scores.index(max(fitness_scores))])
 
@@ -260,6 +284,29 @@ def optimize_key_fitness(ciphertext, given_letter_freq, given_letter_pair_freq, 
     return best_key, best_fitness_score
 
 
+def calculate_eligible_words_percentage(decrypted_text: str, english_words: set):
+    """
+    Calculate the percentage of eligible words in the decrypted text based on the English word set.
+
+    :param decrypted_text: The decrypted text.
+    :param english_words: A set of English words.
+
+    :return: The percentage of eligible words in the decrypted text.
+    """
+    words = decrypted_text.split()
+    num_total_words = len(words)
+    num_eligible_words = 0
+
+    print("Eligible words:")
+    for word in words:
+        if word in english_words:
+            print(word)
+            num_eligible_words += 1
+
+    percentage = (num_eligible_words / num_total_words) * 100
+    return percentage, num_eligible_words
+
+
 if __name__ == '__main__':
     encrypted_text = load_text('enc.txt')
     encrypted_letter_freq = calculate_letter_frequencies(encrypted_text)
@@ -272,11 +319,11 @@ if __name__ == '__main__':
     print(encrypted_letter_pair_freq)
     words = load_english_words('dict.txt')
     avg = 0
-    for i in range(10):
-
+    for i in range(1):
         # Start the timer
         start_time = time.time()
-        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 100, 100, 0.3)
+        key, score = optimize_key_fitness(encrypted_text, encrypted_letter_freq, encrypted_letter_pair_freq, words, 100,
+                                          100, 0.01)
 
         # Calculate the elapsed time
         elapsed_time = time.time() - start_time
@@ -288,8 +335,9 @@ if __name__ == '__main__':
         avg += score
         print(key)
         print(decrypt_text(encrypted_text, key))
-        print(i)
+        print("Percentage of eligible words, num of words:",
+              calculate_eligible_words_percentage(decrypt_text(encrypted_text, key), words))
+        print("i:", i)
         # Print the elapsed time in MM:SS format
         print("Elapsed time: " + time_formatted)
-    print("avg score:", avg/10)
-
+    print("avg score:", avg / 10)
