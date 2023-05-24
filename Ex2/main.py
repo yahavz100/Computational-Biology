@@ -4,6 +4,8 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
+fitness_counter = 0
+
 
 def load_text(filename: str) -> str:
     """
@@ -44,18 +46,18 @@ def load_english_words(filename: str) -> set:
     return english_words
 
 
-def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_freq, words, fitness_counter,
-                         mutation_rate=0.05, num_generations=100, population_size=50):
-    def calculate_fitness(fitness_counter, given_letter_freq, given_letter_pairs_freq, english_words, plain_text):
+def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_freq, words,
+                         mutation_rate=0.05, num_generations=100, population_size=50, converge_limit=47):
+    def calculate_fitness(given_letter_freq, given_letter_pairs_freq, english_words, plain_text):
         """
         Calculate the fitness score of a decryption key.
-        :param fitness_counter: Counter for the fitness function.
         :param given_letter_freq: Frequency of letters in the decrypted text.
         :param given_letter_pairs_freq: Frequency of letter pairs in the decrypted text.
         :param english_words: Set of English words.
         :param plain_text: Decrypted text.
         :return: Fitness score of the decryption key.
         """
+        global fitness_counter
         fitness_counter += 1
         fitness = 0.0
         fitness += sum(1.0 for word in plain_text.lower().split() if word in english_words)
@@ -206,7 +208,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         plain_text = decrypt_text(breeding_population[i].sequence)
 
         # Calculate the fitness of the individual
-        breeding_population[i].fitness = calculate_fitness(fitness_counter, given_letter_freq, given_letter_pairs_freq,
+        breeding_population[i].fitness = calculate_fitness(given_letter_freq, given_letter_pairs_freq,
                                                            words, plain_text)
 
         # Update the best_key if the individual has higher fitness
@@ -216,6 +218,10 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
     # Initialize arrays to store fitness scores and average costs for each generation
     fitness_scores = np.empty(num_generations)
     avg = np.empty(num_generations)
+
+    # Initialize variable for convergence check
+    consecutive_generations_without_improvement = 0
+    previous_best_fitness = best_key.fitness
 
     # Perform the evolution process for the specified number of generations
     for Generation in range(num_generations):
@@ -248,11 +254,11 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
             # Decrypt the text using the children's sequences and calculate their fitness
             plain_text = decrypt_text(child1.sequence)
-            child1.fitness = calculate_fitness(fitness_counter, given_letter_freq, given_letter_pairs_freq, words,
+            child1.fitness = calculate_fitness(given_letter_freq, given_letter_pairs_freq, words,
                                                plain_text)
 
             plain_text = decrypt_text(child2.sequence)
-            child2.fitness = calculate_fitness(fitness_counter, given_letter_freq, given_letter_pairs_freq, words,
+            child2.fitness = calculate_fitness(given_letter_freq, given_letter_pairs_freq, words,
                                                plain_text)
 
             population.append(child1)
@@ -268,6 +274,17 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         breeding_population += population
         breeding_population = sorted(breeding_population, key=lambda x: x.fitness, reverse=True)
         breeding_population = breeding_population[:population_size]
+
+        # Check for convergence
+        if best_key.fitness <= previous_best_fitness:
+            consecutive_generations_without_improvement += 1
+        else:
+            consecutive_generations_without_improvement = 0
+
+        if consecutive_generations_without_improvement >= converge_limit:
+            break
+
+        previous_best_fitness = best_key.fitness
 
         # Store the fitness score of the best individual in each generation
         fitness_scores[Generation] = best_key.fitness
@@ -296,17 +313,16 @@ def create_plain_and_perm_files(key, encrypted_text, eng_alph):
 
 
 if __name__ == '__main__':
-    fitness_counter = 0
     words = load_english_words('dict.txt')
     given_letter_freq = load_frequencies('Letter_Freq.txt', False)
     given_letter_pairs_freq = load_frequencies('Letter2_Freq.txt', True)
     encrypted_text = load_text('enc.txt')
     english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
     key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
-                                                            given_letter_pairs_freq, words, fitness_counter, 0.05,
+                                                            given_letter_pairs_freq, words, 0.05,
                                                             100, 50)
     create_plain_and_perm_files(key, encrypted_text, english_letters_alph)
-
+    print('Fitness counter:', fitness_counter)
     plt.plot(fitness_scores, avg_fitness, marker='o')
     plt.xlabel('Fitness Scores')
     plt.ylabel('Average')
