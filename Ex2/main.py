@@ -47,7 +47,8 @@ def load_english_words(filename: str) -> set:
 
 
 def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_freq, words,
-                         mutation_rate=0.05, num_generations=100, population_size=50, converge_limit=47):
+                         mutation_rate=0.05, num_generations=100, population_size=50, converge_limit=47,
+                         num_local_oppositions=10, mode="regular"):
     def calculate_fitness(given_letter_freq, given_letter_pairs_freq, english_words, plain_text):
         """
         Calculate the fitness score of a decryption key.
@@ -188,6 +189,27 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
         return decrypted_text
 
+    def darwin_optimization(individual, num_swaps):
+        # Make a copy of the individual's sequence
+        sequence = individual.sequence.copy()
+
+        # Perform num swaps
+        for _ in range(num_swaps):
+            # Select two random indices to swap
+            i, j = np.random.choice(len(sequence), size=2, replace=False)
+
+            # Swap the values at the selected indices
+            sequence[i], sequence[j] = sequence[j], sequence[i]
+
+            # Calculate the fitness of the new sequence
+            plain_text = decrypt_text(sequence)
+            new_fitness = calculate_fitness(given_letter_freq, given_letter_pairs_freq, words, plain_text)
+
+            # Accept the swap if it improves the fitness
+            if new_fitness > individual.fitness:
+                individual.sequence = sequence
+                individual.fitness = new_fitness
+
     empty_individual = structure()
     empty_individual.sequence = None
     empty_individual.fitness = None
@@ -251,6 +273,18 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
             # Perform mutation on the children
             child1, child2 = mutation_function(child1, child2, mutation_rate)
+
+            if mode == "darwinian":
+                # Perform Darwinian optimization mode
+                # Perform local optimization on the children
+                darwin_optimization(child1, num_local_oppositions)
+                darwin_optimization(child2, num_local_oppositions)
+
+            elif mode == "american":
+                # Perform American optimization mode
+                pass
+
+            # Regular optimization mode
 
             # Decrypt the text using the children's sequences and calculate their fitness
             plain_text = decrypt_text(child1.sequence)
@@ -320,7 +354,7 @@ if __name__ == '__main__':
     english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
     key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
                                                             given_letter_pairs_freq, words, 0.05,
-                                                            100, 50)
+                                                            100, 50, 47, 10, "regular")
     create_plain_and_perm_files(key, encrypted_text, english_letters_alph)
     print('Fitness counter:', fitness_counter)
     plt.plot(fitness_scores, avg_fitness, marker='o')
