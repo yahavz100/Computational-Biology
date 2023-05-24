@@ -53,7 +53,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         fitness += sum(given_letter_pairs_freq[plain_text[i:i + 2]] * 10 for i in range(len(plain_text) - 1))
         return fitness
 
-    def Mapping_PMX(key1, key2, a, b, child_b_sequence, crossover_point1, crossover_point2):
+    def mapping_pmx(key1, key2, a, b, child_b_sequence, crossover_point1, crossover_point2):
         child_a_seq = a
         mapping_a = {key1.sequence[i]: b[i] for i in range(crossover_point1, crossover_point2 + 1)}
         mapping_b = {key2.sequence[i]: child_a_seq[i] for i in range(crossover_point1, crossover_point2 + 1)}
@@ -78,7 +78,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         a, b = np.empty_like(key1.sequence), np.empty_like(key2.sequence)
         a[crossover_point1:crossover_point2 + 1], b[crossover_point1:crossover_point2 + 1] = \
              key1.sequence[crossover_point1:crossover_point2 + 1], key2.sequence[crossover_point1:crossover_point2 + 1]
-        child_a.sequence, child_b.sequence = Mapping_PMX(key1, key2, a, b, child_b.sequence, crossover_point1, crossover_point2)
+        child_a.sequence, child_b.sequence = mapping_pmx(key1, key2, a, b, child_b.sequence, crossover_point1, crossover_point2)
         return child_a, child_b
 
     def mutation_function(child_1, child_2, mutation_rate):
