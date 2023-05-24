@@ -2,6 +2,7 @@ import time
 from ypstruct import structure
 from collections import defaultdict
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def load_text(filename: str) -> str:
@@ -77,8 +78,9 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         child_a, child_b = key1.deepcopy(), key2.deepcopy()
         a, b = np.empty_like(key1.sequence), np.empty_like(key2.sequence)
         a[crossover_point1:crossover_point2 + 1], b[crossover_point1:crossover_point2 + 1] = \
-             key1.sequence[crossover_point1:crossover_point2 + 1], key2.sequence[crossover_point1:crossover_point2 + 1]
-        child_a.sequence, child_b.sequence = mapping_pmx(key1, key2, a, b, child_b.sequence, crossover_point1, crossover_point2)
+            key1.sequence[crossover_point1:crossover_point2 + 1], key2.sequence[crossover_point1:crossover_point2 + 1]
+        child_a.sequence, child_b.sequence = mapping_pmx(key1, key2, a, b, child_b.sequence, crossover_point1,
+                                                         crossover_point2)
         return child_a, child_b
 
     def mutation_function(child_1, child_2, mutation_rate):
@@ -180,7 +182,8 @@ if __name__ == '__main__':
         # Start the timer
         start_time = time.time()
         key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
-                                                                given_letter_pairs_freq, words, fitness_counter, 0.05, 100, 50)
+                                                                given_letter_pairs_freq, words, fitness_counter, 0.05,
+                                                                100, 50)
 
         # print(fitness_scores.size)
         # print(avg_fitness.size)
@@ -203,8 +206,6 @@ if __name__ == '__main__':
         decoded_text = encrypted_text.translate(str.maketrans(mapping))
         with open("perm.txt", 'w') as file:
             file.write(decoded_text)
-
-        import matplotlib.pyplot as plt
 
         plt.plot(fitness_scores, avg_fitness, marker='o')
         plt.xlabel('Fitness Scores')
