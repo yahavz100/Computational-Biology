@@ -1,3 +1,4 @@
+
 import time
 
 from ypstruct import structure
@@ -14,6 +15,7 @@ def load_text(filename: str) -> str:
     return text
 
 
+
 def load_letter_frequencies(file_path):
     with open(file_path, 'r') as file:
         freqs = defaultdict(float)
@@ -25,10 +27,12 @@ def load_letter_frequencies(file_path):
     return freqs
 
 
+
 def load_letter_pair_frequencies(file_path):
     with open(file_path, 'r') as file:
         freqs = defaultdict(float)
         for line in file:
+
             values = line.strip().split('\t')
             if len(values) == 2:
                 freq, pair = values
@@ -171,6 +175,7 @@ if __name__ == '__main__':
         key, score, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
                                                    given_letter_pairs_freq, words, fitness_counter, 0.05, 100, 50)
 
+
         # Calculate the elapsed time
         elapsed_time = time.time() - start_time
 
@@ -178,6 +183,7 @@ if __name__ == '__main__':
         minutes = int(elapsed_time // 60)
         seconds = int(elapsed_time % 60)
         time_formatted = "{:02d}:{:02d}".format(minutes, seconds)
+
         avg += score[99]
         print("i:", i)
         # Print the elapsed time in MM:SS format
@@ -190,4 +196,5 @@ if __name__ == '__main__':
         decoded_text = encrypted_text.translate(str.maketrans(mapping))
         with open("perm.txt", 'w') as file:
             file.write(decoded_text)
+
     print("avg score:", avg / 10)
