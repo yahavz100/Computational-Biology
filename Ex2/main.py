@@ -170,48 +170,40 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
     return best_key.sequence, fitness_scores, avg
 
 
+def create_plain_and_perm_files(key, encrypted_text, eng_alph):
+    """
+    Create 'plain.txt' and 'perm.txt' files based on the decryption key and encrypted text.
+
+    :param key: Decryption key.
+    :param encrypted_text: Encrypted text.
+    :param eng_alph: English alphabet set.
+    """
+
+    with open("plain.txt", 'w') as file:
+        file.write('\n'.join([f"{eng_alph[i]} {key[i]}"
+                              for i in range(len(eng_alph))]))
+
+    mapping = dict(zip(eng_alph, key))
+    decoded_text = encrypted_text.translate(str.maketrans(mapping))
+    with open("perm.txt", 'w') as file:
+        file.write(decoded_text)
+
+
 if __name__ == '__main__':
     fitness_counter = 0
     words = load_english_words('dict.txt')
     given_letter_freq = load_frequencies('Letter_Freq.txt', False)
     given_letter_pairs_freq = load_frequencies('Letter2_Freq.txt', True)
     encrypted_text = load_text('enc.txt')
-    avg = 0
     english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
-    for i in range(1):
-        # Start the timer
-        start_time = time.time()
-        key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
-                                                                given_letter_pairs_freq, words, fitness_counter, 0.05,
-                                                                100, 50)
+    key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
+                                                            given_letter_pairs_freq, words, fitness_counter, 0.05,
+                                                            10, 50)
+    create_plain_and_perm_files(key, encrypted_text, english_letters_alph)
 
-        # print(fitness_scores.size)
-        # print(avg_fitness.size)
-        # Calculate the elapsed time
-        elapsed_time = time.time() - start_time
-
-        # Convert elapsed time to MM:SS format
-        minutes = int(elapsed_time // 60)
-        seconds = int(elapsed_time % 60)
-        time_formatted = "{:02d}:{:02d}".format(minutes, seconds)
-        avg += fitness_scores[99]
-        print("i:", i)
-        # Print the elapsed time in MM:SS format
-        print("Elapsed time: " + time_formatted)
-        with open("plain.txt", 'w') as file:
-            file.write('\n'.join([f"{english_letters_alph[i]} {key[i]}"
-                                  for i in range(len(english_letters_alph))]))
-
-        mapping = dict(zip(english_letters_alph, key))
-        decoded_text = encrypted_text.translate(str.maketrans(mapping))
-        with open("perm.txt", 'w') as file:
-            file.write(decoded_text)
-
-        plt.plot(fitness_scores, avg_fitness, marker='o')
-        plt.xlabel('Fitness Scores')
-        plt.ylabel('Average')
-        plt.title('Average in Relation to Fitness Scores')
-        plt.grid(True)
-        plt.show()
-
-    print("avg score:", avg / 10)
+    plt.plot(fitness_scores, avg_fitness, marker='o')
+    plt.xlabel('Fitness Scores')
+    plt.ylabel('Average')
+    plt.title('Average in Relation to Fitness Scores')
+    plt.grid(True)
+    plt.show()
