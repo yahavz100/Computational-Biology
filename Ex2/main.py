@@ -274,17 +274,15 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
             # Perform mutation on the children
             child1, child2 = mutation_function(child1, child2, mutation_rate)
 
-            if mode == "darwinian":
+            if mode == "darwin":
                 # Perform Darwinian optimization mode
                 # Perform local optimization on the children
                 darwin_optimization(child1, num_local_oppositions)
                 darwin_optimization(child2, num_local_oppositions)
 
-            elif mode == "american":
-                # Perform American optimization mode
+            elif mode == "lamarck":
+                # Perform Lamarck optimization mode
                 pass
-
-            # Regular optimization mode
 
             # Decrypt the text using the children's sequences and calculate their fitness
             plain_text = decrypt_text(child1.sequence)
