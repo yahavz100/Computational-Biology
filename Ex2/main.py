@@ -1,6 +1,4 @@
-
 import time
-
 from ypstruct import structure
 from collections import defaultdict
 import numpy as np
@@ -15,29 +13,22 @@ def load_text(filename: str) -> str:
     return text
 
 
-
-def load_letter_frequencies(file_path):
-    with open(file_path, 'r') as file:
-        freqs = defaultdict(float)
+def load_frequencies(filename: str, is_pair: bool) -> dict:
+    """
+    Load letter or letter pair frequencies from a file and return them as a dictionary.
+    """
+    freq_dict = defaultdict(float)
+    with open(filename, 'r') as file:
         for line in file:
-            values = line.strip().split('\t')
-            if len(values) == 2:
-                freq, char = values
-                freqs[char.lower()] = float(freq)
-    return freqs
+            line = line.strip()
+            if line:
+                if line == '#REF!':
+                    continue
+                freq, item = line.split()
+                dict_key = item.lower() if is_pair else item.lower()
+                freq_dict[dict_key] = float(freq)
 
-
-
-def load_letter_pair_frequencies(file_path):
-    with open(file_path, 'r') as file:
-        freqs = defaultdict(float)
-        for line in file:
-
-            values = line.strip().split('\t')
-            if len(values) == 2:
-                freq, pair = values
-                freqs[pair.lower()] = float(freq)
-    return freqs
+    return freq_dict
 
 
 def load_english_words(filename: str) -> set:
@@ -102,8 +93,19 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
                         i.item()]
         return new_key_child_1, new_key_child_2
 
-    def roulette(p):
-        return np.argwhere((sum(p) * np.random.rand()) <= np.cumsum(p))[0][0]
+    def roulette_wheel_selection(p):
+        """
+        Perform roulette wheel selection to get the index of an individual based on the given probabilities.
+
+        :param p: A list of probabilities representing the individuals' fitness scores.
+        :return: The index of the selected individual.
+        """
+        cumulative_probs = np.cumsum(p)
+        total_sum = cumulative_probs[-1]
+        r = np.random.uniform(0, total_sum)
+        selected_index = np.argmax(r <= cumulative_probs)
+
+        return selected_index
 
     def decrypt_text(code):
         code_dict = dict(zip(np.array(list('abcdefghijklmnopqrstuvwxyz')), code))
@@ -119,8 +121,9 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
     for i in range(population_size):
         breeding_population[i].sequence = np.random.permutation(np.array(list('abcdefghijklmnopqrstuvwxyz')).copy())
         plain_text = decrypt_text(breeding_population[i].sequence)
-        breeding_population[i].fitness = calculate_fitness(fitness_counter, given_letter_freq, given_letter_pairs_freq, words,
-                                           plain_text)
+        breeding_population[i].fitness = calculate_fitness(fitness_counter, given_letter_freq, given_letter_pairs_freq,
+                                                           words,
+                                                           plain_text)
         if breeding_population[i].fitness > best_key.fitness:
             best_key = breeding_population[i].deepcopy()
     fitness_scores = np.empty(num_generations)
@@ -132,13 +135,14 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         normalized_costs = costs / average_cost if average_cost != 0 else costs
         probs = np.exp(-normalized_costs)
         probs /= np.sum(probs)
-        avg[Generation] = average_cost     # assuming 'Generation' is a variable storing the current generation number
+        avg[Generation] = average_cost  # assuming 'Generation' is a variable storing the current generation number
         print(f"Generation : {Generation}")
 
         population = []
         range_population_size = int(np.round(population_size) * 2) // 2
         for _ in range(range_population_size):
-            parent1, parent2 = breeding_population[roulette(probs)], breeding_population[roulette(probs)]
+            parent1, parent2 = breeding_population[roulette_wheel_selection(probs)], breeding_population[
+                roulette_wheel_selection(probs)]
             child1, child2 = crossover(parent1, parent2)
             child1, child2 = mutation_function(child1, child2, mutation_rate)
             plain_text = decrypt_text(child1.sequence)
@@ -164,8 +168,8 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 if __name__ == '__main__':
     fitness_counter = 0
     words = load_english_words('dict.txt')
-    given_letter_freq = load_letter_frequencies('Letter_Freq.txt')
-    given_letter_pairs_freq = load_letter_pair_frequencies('Letter2_Freq.txt')
+    given_letter_freq = load_frequencies('Letter_Freq.txt', False)
+    given_letter_pairs_freq = load_frequencies('Letter2_Freq.txt', True)
     encrypted_text = load_text('enc.txt')
     avg = 0
     english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
@@ -173,8 +177,7 @@ if __name__ == '__main__':
         # Start the timer
         start_time = time.time()
         key, score, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
-                                                   given_letter_pairs_freq, words, fitness_counter, 0.05, 100, 50)
-
+                                                       given_letter_pairs_freq, words, fitness_counter, 0.05, 100, 50)
 
         # Calculate the elapsed time
         elapsed_time = time.time() - start_time
