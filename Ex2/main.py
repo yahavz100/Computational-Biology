@@ -198,7 +198,7 @@ if __name__ == '__main__':
     english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
     key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
                                                             given_letter_pairs_freq, words, fitness_counter, 0.05,
-                                                            10, 50)
+                                                            100, 50)
     create_plain_and_perm_files(key, encrypted_text, english_letters_alph)
 
     plt.plot(fitness_scores, avg_fitness, marker='o')
