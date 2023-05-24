@@ -62,17 +62,23 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         fitness += sum(given_letter_pairs_freq[plain_text[i:i + 2]] * 10 for i in range(len(plain_text) - 1))
         return fitness
 
-    def Mapping(parent, child, crossover_point1, crossover_point2):
-        return {parent.sequence[i]: child[i] for i in range(crossover_point1, crossover_point2 + 1)}
-
-    def Value_mapping(parent, child, mapp, crossover_point1, crossover_point2):
-        for i in range(len(parent.sequence)):
+    def Mapping_PMX(key1, key2, a, b, child_b_sequence, crossover_point1, crossover_point2):
+        child_a_seq = a
+        mapping_a = {key1.sequence[i]: b[i] for i in range(crossover_point1, crossover_point2 + 1)}
+        mapping_b = {key2.sequence[i]: child_a_seq[i] for i in range(crossover_point1, crossover_point2 + 1)}
+        for i in range(len(key2.sequence)):
             if i < crossover_point1 or i > crossover_point2:
-                value = parent.sequence[i]
-                while value in mapp:
-                    value = mapp[value]
-                child[i] = value
-        return child
+                value = key2.sequence[i]
+                while value in mapping_a:
+                    value = mapping_a[value]
+                child_a_seq[i] = value
+        for i in range(len(key1.sequence)):
+            if i < crossover_point1 or i > crossover_point2:
+                value = key1.sequence[i]
+                while value in mapping_b:
+                    value = mapping_b[value]
+                child_b_sequence[i] = value
+        return child_a_seq, child_b_sequence
 
     def crossover(key1, key2):
         crossover_point1 = np.random.randint(1, len(key1.sequence))
@@ -80,11 +86,8 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         child_a, child_b = key1.deepcopy(), key2.deepcopy()
         a, b = np.empty_like(key1.sequence), np.empty_like(key2.sequence)
         a[crossover_point1:crossover_point2 + 1], b[crossover_point1:crossover_point2 + 1] = \
-            key1.sequence[crossover_point1:crossover_point2 + 1], key2.sequence[crossover_point1:crossover_point2 + 1]
-        mapping_a = Mapping(key1, b, crossover_point1, crossover_point2)
-        child_a.sequence = Value_mapping(key2, a, mapping_a, crossover_point1, crossover_point2)
-        mapping_b = Mapping(key2, child_a.sequence, crossover_point1, crossover_point2)
-        child_b.sequence = Value_mapping(key1, child_b.sequence, mapping_b, crossover_point1, crossover_point2)
+             key1.sequence[crossover_point1:crossover_point2 + 1], key2.sequence[crossover_point1:crossover_point2 + 1]
+        child_a.sequence, child_b.sequence = Mapping_PMX(key1, key2, a, b, child_b.sequence, crossover_point1, crossover_point2)
         return child_a, child_b
 
     def mutation_function(child_1, child_2, mutation_rate):
@@ -169,7 +172,7 @@ if __name__ == '__main__':
     encrypted_text = load_text('enc.txt')
     avg = 0
     english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
-    for i in range(10):
+    for i in range(1):
         # Start the timer
         start_time = time.time()
         key, score, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
