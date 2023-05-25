@@ -1,4 +1,6 @@
 import tkinter as tk
+
+from matplotlib import pyplot as plt
 from ypstruct import structure
 from collections import defaultdict
 import numpy as np
@@ -53,9 +55,7 @@ def load_english_words(filename: str) -> set:
     return english_words
 
 
-def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_freq, words,
-                         mutation_rate=MUTATION_RATE, num_generations=NUM_GENERATIONS, population_size=POPULATION_SIZE, converge_limit=CONVERGE_LIMIT,
-                         num_local_oppositions=LOCAL_SEARCH_ITER, mode=MODE):
+def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_freq, words):
     def calculate_fitness(given_letter_freq, given_letter_pairs_freq, english_words, plain_text):
         """
         Calculate the fitness score of a decryption key.
@@ -132,12 +132,11 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
         return child_a, child_b
 
-    def mutation_function(child_1, child_2, mutation_rate):
+    def mutation_function(child_1, child_2):
         """
         Perform mutation on two child keys.
         :param child_1: First child key.
         :param child_2: Second child key.
-        :param mutation_rate: Rate of mutation.
         :return: Mutated child keys.
         """
 
@@ -196,7 +195,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
         return decrypted_text
 
-    def local_search(individual, num_swaps, ga_mode):
+    def local_search(individual, num_swaps):
         # Make a copy of the individual's sequence
         sequence = individual.sequence.copy()
 
@@ -281,19 +280,19 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
             child1, child2 = crossover(parent1, parent2)
 
             # Perform mutation on the children
-            child1, child2 = mutation_function(child1, child2, MUTATION_RATE)
+            child1, child2 = mutation_function(child1, child2)
 
             if MODE == "Darwin":
                 # Perform Darwinian optimization mode
                 # Perform local optimization on the children
-                local_search(child1, LOCAL_SEARCH_ITER, MODE)
-                local_search(child2, LOCAL_SEARCH_ITER, MODE)
+                local_search(child1, LOCAL_SEARCH_ITER)
+                local_search(child2, LOCAL_SEARCH_ITER)
 
             elif MODE == "Lamarck":
                 # Perform Lamarck optimization mode
                 # Update the children's sequences using their fitness scores
-                local_search(child1, LOCAL_SEARCH_ITER, MODE)
-                local_search(child2, LOCAL_SEARCH_ITER, MODE)
+                local_search(child1, LOCAL_SEARCH_ITER)
+                local_search(child2, LOCAL_SEARCH_ITER)
 
             # Decrypt the text using the children's sequences and calculate their fitness
             plain_text = decrypt_text(child1.sequence)
@@ -377,14 +376,17 @@ class UpdateValuesScreen(tk.Frame):
             self.entries.append(entry)
 
         # Create a button to update the values and display the plot
-        self.regular_button = tk.Button(self, text="Regular", font=("Helvetica", 14), command=lambda: self.update_values("Regular"))
-        self.darwin_button = tk.Button(self, text="Darwin", font=("Helvetica", 14), command=lambda: self.update_values("Darwin"))
-        self.lamarck_button = tk.Button(self, text="Lamarck", font=("Helvetica", 14), command=lambda: self.update_values("Lamarck"))
+        self.regular_button = tk.Button(self, text="Regular", font=("Helvetica", 14),
+                                        command=lambda: self.update_values("Regular"))
+        self.darwin_button = tk.Button(self, text="Darwin", font=("Helvetica", 14),
+                                       command=lambda: self.update_values("Darwin"))
+        self.lamarck_button = tk.Button(self, text="Lamarck", font=("Helvetica", 14),
+                                        command=lambda: self.update_values("Lamarck"))
 
         # Layout the widgets using grid
         self.title_label.grid(row=0, column=0, columnspan=2)
         self.regular_button.grid(row=len(labels) + 2, column=0, columnspan=1, pady=20, sticky="s")
-        self.darwin_button.grid(row=len(labels) + 2, column=1, columnspan=2, pady=20, padx=20, sticky="s")
+        self.darwin_button.grid(row=len(labels) + 2, column=1, columnspan=1, pady=20, padx=20, sticky="s")
         self.lamarck_button.grid(row=len(labels) + 2, column=2, columnspan=3, pady=20, padx=20, sticky="s")
 
         # Set the last row and column to have a weight of 1
@@ -396,9 +398,9 @@ class UpdateValuesScreen(tk.Frame):
         # Get the values entered by the user
         NUM_GENERATIONS = int(self.entries[0].get())
         POPULATION_SIZE = int(self.entries[1].get())
-        MUTATION_RATE = float(self.entries[3].get())
-        CONVERGE_LIMIT = int(self.entries[4].get())
-        LOCAL_SEARCH_ITER = int(self.entries[5].get())
+        MUTATION_RATE = float(self.entries[2].get())
+        CONVERGE_LIMIT = int(self.entries[3].get())
+        LOCAL_SEARCH_ITER = int(self.entries[4].get())
 
         if button_name == "Darwin":
             MODE = "Darwin"
@@ -408,6 +410,12 @@ class UpdateValuesScreen(tk.Frame):
             MODE = "Regular"
 
         self.parent.destroy()
+
+
+def on_closing():
+    global gui_closed
+    gui_closed = True
+    root.destroy()
 
 
 if __name__ == '__main__':
@@ -420,22 +428,25 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.geometry("800x800")
     root.resizable(True, True)
+    root.protocol("WM_DELETE_WINDOW", on_closing)
     update_screen = UpdateValuesScreen(root)
     update_screen.pack()
 
     # Update the window to show the contents
     root.update()
+    gui_closed = False
 
     # Start the main event loop
     root.mainloop()
 
-    # sol_key, fitness_scores, avg_fitness = optimize_key_fitness(enc_text, given_letter_freqs,
-    #                                                             given_letter_pairs_freqs, eng_words)
-    # create_plain_and_perm_files(sol_key, enc_text)
-    # print('Fitness counter:', FITNESS_COUNTER)
-    # plt.plot(fitness_scores, avg_fitness, marker='o')
-    # plt.xlabel('Fitness Scores')
-    # plt.ylabel('Average')
-    # plt.title('Average in Relation to Fitness Scores')
-    # plt.grid(True)
-    # plt.show()
+    if not gui_closed:
+        sol_key, fitness_scores, avg_fitness = optimize_key_fitness(enc_text, given_letter_freqs,
+                                                                    given_letter_pairs_freqs, eng_words)
+        create_plain_and_perm_files(sol_key, enc_text)
+        print('Fitness counter:', FITNESS_COUNTER)
+        plt.plot(fitness_scores, avg_fitness, marker='o')
+        plt.xlabel('Fitness Scores')
+        plt.ylabel('Average')
+        plt.title('Average in Relation to Fitness Scores')
+        plt.grid(True)
+        plt.show()
