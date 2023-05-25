@@ -1,10 +1,11 @@
-import time
 from ypstruct import structure
 from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
+import string
 
 fitness_counter = 0
+english_alphabet = list(string.ascii_lowercase)
 
 
 def load_text(filename: str) -> str:
@@ -179,17 +180,17 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         """
 
         # Create a dictionary mapping English letters to the code letters
-        code_dict = dict(zip(list('abcdefghijklmnopqrstuvwxyz'), code))
+        code_dict = dict(zip(english_alphabet, code))
 
         # Create a mapping dictionary with default values as the original letters
-        mapp = {letter: code_dict.get(letter, letter) for letter in list('abcdefghijklmnopqrstuvwxyz')}
+        mapp = {letter: code_dict.get(letter, letter) for letter in english_alphabet}
 
         # Translate the encrypted text using the mapping dictionary
         decrypted_text = encrypted_text.translate(str.maketrans(mapp))
 
         return decrypted_text
 
-    def darwin_optimization(individual, num_swaps):
+    def local_search(individual, num_swaps, ga_mode):
         # Make a copy of the individual's sequence
         sequence = individual.sequence.copy()
 
@@ -207,8 +208,10 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
             # Accept the swap if it improves the fitness
             if new_fitness > individual.fitness:
-                individual.sequence = sequence
                 individual.fitness = new_fitness
+
+                if ga_mode == "lamarck":
+                    individual.sequence = sequence
 
     empty_individual = structure()
     empty_individual.sequence = None
@@ -224,7 +227,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
     # Generate initial population and calculate their fitness scores
     for i in range(population_size):
         # Generate a random permutation sequence as the individual's sequence
-        breeding_population[i].sequence = np.random.permutation(np.array(list('abcdefghijklmnopqrstuvwxyz')).copy())
+        breeding_population[i].sequence = np.random.permutation(np.array(english_alphabet).copy())
 
         # Decrypt the text using the individual's sequence
         plain_text = decrypt_text(breeding_population[i].sequence)
@@ -274,17 +277,17 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
             # Perform mutation on the children
             child1, child2 = mutation_function(child1, child2, mutation_rate)
 
-            if mode == "darwinian":
+            if mode == "darwin":
                 # Perform Darwinian optimization mode
                 # Perform local optimization on the children
-                darwin_optimization(child1, num_local_oppositions)
-                darwin_optimization(child2, num_local_oppositions)
+                local_search(child1, num_local_oppositions, "darwin")
+                local_search(child2, num_local_oppositions, "darwin")
 
-            elif mode == "american":
-                # Perform American optimization mode
-                pass
-
-            # Regular optimization mode
+            elif mode == "lamarck":
+                # Perform Lamarck optimization mode
+                # Update the children's sequences using their fitness scores
+                local_search(child1, num_local_oppositions, "lamarck")
+                local_search(child2, num_local_oppositions, "lamarck")
 
             # Decrypt the text using the children's sequences and calculate their fitness
             plain_text = decrypt_text(child1.sequence)
@@ -327,20 +330,19 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
     return best_key.sequence, fitness_scores, avg
 
 
-def create_plain_and_perm_files(key, encrypted_text, eng_alph):
+def create_plain_and_perm_files(key, encrypted_text):
     """
     Create 'plain.txt' and 'perm.txt' files based on the decryption key and encrypted text.
 
     :param key: Decryption key.
     :param encrypted_text: Encrypted text.
-    :param eng_alph: English alphabet set.
     """
 
     with open("plain.txt", 'w') as file:
-        file.write('\n'.join([f"{eng_alph[i]} {key[i]}"
-                              for i in range(len(eng_alph))]))
+        file.write('\n'.join([f"{english_alphabet[i]} {key[i]}"
+                              for i in range(len(english_alphabet))]))
 
-    mapping = dict(zip(eng_alph, key))
+    mapping = dict(zip(english_alphabet, key))
     decoded_text = encrypted_text.translate(str.maketrans(mapping))
     with open("perm.txt", 'w') as file:
         file.write(decoded_text)
@@ -351,11 +353,11 @@ if __name__ == '__main__':
     given_letter_freq = load_frequencies('Letter_Freq.txt', False)
     given_letter_pairs_freq = load_frequencies('Letter2_Freq.txt', True)
     encrypted_text = load_text('enc.txt')
-    english_letters_alph = np.array(list('abcdefghijklmnopqrstuvwxyz'))
+    english_letters_alph = np.array(english_alphabet)
     key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
                                                             given_letter_pairs_freq, words, 0.05,
-                                                            100, 50, 47, 10, "regular")
-    create_plain_and_perm_files(key, encrypted_text, english_letters_alph)
+                                                            100, 50, 47, 10, "lamarck")
+    create_plain_and_perm_files(key, encrypted_text)
     print('Fitness counter:', fitness_counter)
     plt.plot(fitness_scores, avg_fitness, marker='o')
     plt.xlabel('Fitness Scores')
