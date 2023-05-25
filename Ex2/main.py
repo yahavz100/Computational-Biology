@@ -444,6 +444,8 @@ if __name__ == '__main__':
                                                                     given_letter_pairs_freqs, eng_words)
         create_plain_and_perm_files(sol_key, enc_text)
         print('Fitness counter:', FITNESS_COUNTER)
+        print('Fitness average:', avg_fitness[NUM_GENERATIONS - 1])
+        print('Fitness scores:', fitness_scores[NUM_GENERATIONS - 1])
         plt.plot(fitness_scores, avg_fitness, marker='o')
         plt.xlabel('Fitness Scores')
         plt.ylabel('Average')
