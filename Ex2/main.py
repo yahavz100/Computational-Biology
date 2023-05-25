@@ -49,7 +49,7 @@ def load_english_words(filename: str) -> set:
 
 def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_freq, words,
                          mutation_rate=0.05, num_generations=100, population_size=50, converge_limit=47,
-                         num_local_oppositions=10, mode="regular"):
+                         num_local_oppositions=10, mode="lamarck"):
     def calculate_fitness(given_letter_freq, given_letter_pairs_freq, english_words, plain_text):
         """
         Calculate the fitness score of a decryption key.
@@ -349,15 +349,14 @@ def create_plain_and_perm_files(key, encrypted_text):
 
 
 if __name__ == '__main__':
-    words = load_english_words('dict.txt')
-    given_letter_freq = load_frequencies('Letter_Freq.txt', False)
-    given_letter_pairs_freq = load_frequencies('Letter2_Freq.txt', True)
-    encrypted_text = load_text('enc.txt')
+    eng_words = load_english_words('dict.txt')
+    given_letter_freqs = load_frequencies('Letter_Freq.txt', False)
+    given_letter_pairs_freqs = load_frequencies('Letter2_Freq.txt', True)
+    enc_text = load_text('enc.txt')
     english_letters_alph = np.array(english_alphabet)
-    key, fitness_scores, avg_fitness = optimize_key_fitness(encrypted_text, given_letter_freq,
-                                                            given_letter_pairs_freq, words, 0.05,
-                                                            100, 50, 47, 10, "lamarck")
-    create_plain_and_perm_files(key, encrypted_text)
+    sol_key, fitness_scores, avg_fitness = optimize_key_fitness(enc_text, given_letter_freqs,
+                                                                given_letter_pairs_freqs, eng_words)
+    create_plain_and_perm_files(sol_key, enc_text)
     print('Fitness counter:', fitness_counter)
     plt.plot(fitness_scores, avg_fitness, marker='o')
     plt.xlabel('Fitness Scores')
