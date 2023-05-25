@@ -70,7 +70,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         fitness = 0.0
         fitness += sum(1.0 for word in plain_text.lower().split() if word in english_words)
         fitness += sum(given_letter_freq[char] for char in plain_text)
-        fitness += sum(given_letter_pairs_freq[plain_text[i:i + 2]] * 10 for i in range(len(plain_text) - 1))
+        fitness += sum(given_letter_pairs_freq[plain_text[j:j + 2]] * 10 for j in range(len(plain_text) - 1))
         return fitness
 
     def mapping_pmx(key1, key2, a, b, child_b_sequence, crossover_point1, crossover_point2):
@@ -86,22 +86,22 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         :return: Child key sequences after PMX.
         """
         child_a_seq = a
-        mapping_a = {key1.sequence[i]: b[i] for i in range(crossover_point1, crossover_point2 + 1)}
-        mapping_b = {key2.sequence[i]: child_a_seq[i] for i in range(crossover_point1, crossover_point2 + 1)}
+        mapping_a = {key1.sequence[j]: b[j] for j in range(crossover_point1, crossover_point2 + 1)}
+        mapping_b = {key2.sequence[j]: child_a_seq[j] for j in range(crossover_point1, crossover_point2 + 1)}
 
-        for i in range(len(key2.sequence)):
-            if i < crossover_point1 or i > crossover_point2:
-                value = key2.sequence[i]
+        for j in range(len(key2.sequence)):
+            if j < crossover_point1 or j > crossover_point2:
+                value = key2.sequence[j]
                 while value in mapping_a:
                     value = mapping_a[value]
-                child_a_seq[i] = value
+                child_a_seq[j] = value
 
-        for i in range(len(key1.sequence)):
-            if i < crossover_point1 or i > crossover_point2:
-                value = key1.sequence[i]
+        for j in range(len(key1.sequence)):
+            if j < crossover_point1 or j > crossover_point2:
+                value = key1.sequence[j]
                 while value in mapping_b:
                     value = mapping_b[value]
-                child_b_sequence[i] = value
+                child_b_sequence[j] = value
         return child_a_seq, child_b_sequence
 
     def crossover(key1, key2):
@@ -148,17 +148,17 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
 
         # Mutate child 1
         if np.argwhere(np.random.rand(*child_1.sequence.shape) <= MUTATION_RATE).size:
-            for i in np.argwhere(np.random.rand(*child_1.sequence.shape) <= MUTATION_RATE):
+            for j in np.argwhere(np.random.rand(*child_1.sequence.shape) <= MUTATION_RATE):
                 # Swap the letters at the mutation positions
-                new_key_child_1.sequence[i.item()], new_key_child_1.sequence[letter1] = \
-                    new_key_child_1.sequence[letter1], new_key_child_1.sequence[i.item()]
+                new_key_child_1.sequence[j.item()], new_key_child_1.sequence[letter1] = \
+                    new_key_child_1.sequence[letter1], new_key_child_1.sequence[j.item()]
 
         # Mutate child 2
         if np.argwhere(np.random.rand(*child_2.sequence.shape) <= MUTATION_RATE).size:
-            for i in np.argwhere(np.random.rand(*child_2.sequence.shape) <= MUTATION_RATE):
+            for j in np.argwhere(np.random.rand(*child_2.sequence.shape) <= MUTATION_RATE):
                 # Swap the letters at the mutation positions
-                new_key_child_2.sequence[i.item()], new_key_child_2.sequence[letter2] = \
-                    new_key_child_2.sequence[letter2], new_key_child_2.sequence[i.item()]
+                new_key_child_2.sequence[j.item()], new_key_child_2.sequence[letter2] = \
+                    new_key_child_2.sequence[letter2], new_key_child_2.sequence[j.item()]
 
         return new_key_child_1, new_key_child_2
 
@@ -202,14 +202,14 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         # Perform num swaps
         for _ in range(num_swaps):
             # Select two random indices to swap
-            i, j = np.random.choice(len(sequence), size=2, replace=False)
+            k, j = np.random.choice(len(sequence), size=2, replace=False)
 
             # Swap the values at the selected indices
-            sequence[i], sequence[j] = sequence[j], sequence[i]
+            sequence[k], sequence[j] = sequence[j], sequence[k]
 
             # Calculate the fitness of the new sequence
-            plain_text = decrypt_text(sequence)
-            new_fitness = calculate_fitness(given_letter_freq, given_letter_pairs_freq, words, plain_text)
+            plaintext = decrypt_text(sequence)
+            new_fitness = calculate_fitness(given_letter_freq, given_letter_pairs_freq, words, plaintext)
 
             # Accept the swap if it improves the fitness
             if new_fitness > individual.fitness:
@@ -246,7 +246,7 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
             best_key = breeding_population[i].deepcopy()
 
     # Initialize arrays to store fitness scores and average costs for each generation
-    fitness_scores = np.empty(NUM_GENERATIONS)
+    gen_fitness_scores = np.empty(NUM_GENERATIONS)
     avg = np.empty(NUM_GENERATIONS)
 
     # Initialize variable for convergence check
@@ -329,10 +329,10 @@ def optimize_key_fitness(encrypted_text, given_letter_freq, given_letter_pairs_f
         previous_best_fitness = best_key.fitness
 
         # Store the fitness score of the best individual in each generation
-        fitness_scores[Generation] = best_key.fitness
+        gen_fitness_scores[Generation] = best_key.fitness
 
     # Return the best decryption key, fitness scores, and average costs
-    return best_key.sequence, fitness_scores, avg
+    return best_key.sequence, gen_fitness_scores, avg
 
 
 def create_plain_and_perm_files(key, encrypted_text):
