@@ -4,26 +4,10 @@ import numpy as np
 # Step 1: Data Preparation
 def load_data(file_path):
     # Load the data
-    data0 = np.loadtxt(file_path, dtype=int)
-    return data0[:15000], data0[15000:]
-
-
-train_file = "nn0.txt"
-test_file = "nn1.txt"
-
-X_train, y_train = load_data(train_file)
-X_test, y_test = load_data(test_file)
-
-
-# Step 2: Define the Genetic Algorithm
-population_size = 100
-mutation_rate = 0.01
-crossover_rate = 0.8
-num_generations = 50
-
-# Define the maximum number of layers and connections for the neural network
-max_layers = 5
-max_connections = 50
+    data = np.loadtxt(file_path, dtype=int)
+    X = data[:, :-1]  # Extract the features (binary strings)
+    y = data[:, -1]  # Extract the labels (legality)
+    return X, y
 
 
 def sigmoid(x):
@@ -52,18 +36,12 @@ def forward_propagation(X, W1, b1, W2, b2):
 
 
 def predict(network, X):
-    W1, b1, W2, b2 = network
-
-    # Forward propagation
-    z1 = np.dot(X, W1) + b1
-    a1 = sigmoid(z1)
-    z2 = np.dot(a1, W2) + b2
-    predictions = sigmoid(z2)
-
-    # Convert predictions to binary values (0 or 1)
-    binary_predictions = np.where(predictions >= 0.5, 1, 0)
-
-    return binary_predictions
+    W, b = network  # Unpack the network values (assuming two values)
+    # Perform the prediction using the weights and biases
+    # Adjust the implementation according to your specific network architecture
+    Z = np.dot(X, W) + b
+    A = sigmoid(Z)  # Apply the appropriate activation function
+    return A
 
 
 # Step 3: Fitness Function
@@ -81,13 +59,20 @@ def evaluate_fitness(network, X, y):
 
 
 def select_parents(population, fitness_scores):
-    # Convert fitness scores to probabilities
-    probabilities = fitness_scores / np.sum(fitness_scores)
+    population_array = np.array(population)
+    fitness_scores_array = np.array(fitness_scores)
 
-    # Select parents based on their probabilities
-    parents = np.random.choice(population, size=2, replace=False, p=probabilities)
+    probabilities = fitness_scores_array / np.sum(fitness_scores_array)
 
-    return parents
+    if np.isnan(probabilities).any() or np.sum(fitness_scores_array) == 0:
+        probabilities = np.ones(len(population)) / len(population)
+
+    parent_indices = np.random.choice(len(population), size=2, replace=False, p=probabilities)
+
+    parent1 = population_array[parent_indices[0]]
+    parent2 = population_array[parent_indices[1]]
+
+    return parent1, parent2
 
 
 # Step 5: Crossover
@@ -140,7 +125,7 @@ def perform_mutation(network):
         b2 += np.random.randn(*b2.shape) * noise_scale
 
     # Construct the mutated network
-    mutated_network = (W1, b1, W2, b2)
+    mutated_network = [W1, b1, W2, b2]
 
     return mutated_network
 
@@ -165,14 +150,19 @@ def evolve_population(population, X_train, y_train):
 def initialize_population(population_size, network_shape):
     population = []
     for _ in range(population_size):
-        # Initialize network weights randomly
-        W1 = np.random.randn(network_shape[0], network_shape[1])
-        b1 = np.zeros(network_shape[1])
-        W2 = np.random.randn(network_shape[1], network_shape[2])
-        b2 = np.zeros(network_shape[2])
+        # Define the network architecture
+        input_size = 10
+        hidden_size = 5
+        output_size = 2
 
-        # Create a network tuple
-        network = (W1, b1, W2, b2)
+        # Initialize weights and biases
+        W1 = np.random.randn(input_size, hidden_size)
+        b1 = np.zeros(hidden_size)
+        W2 = np.random.randn(hidden_size, output_size)
+        b2 = np.zeros(output_size)
+
+        # Create the network variable
+        network = [W1, b1, W2, b2]
 
         # Add the network to the population
         population.append(network)
@@ -182,8 +172,9 @@ def initialize_population(population_size, network_shape):
 
 # Step 8: Termination (Using a fixed number of generations)
 def genetic_algorithm(X, y, population_size, mutation_rate, crossover_rate, num_generations):
-    network_shape = (X.shape[1], 10, 1)  # Adjust the hidden layer size as needed
-    population = initialize_population(population_size, network_shape)
+    # network_shape = (X.shape[1], 10, 1)  # Adjust the hidden layer size as needed
+    # Initialize population as a 2D NumPy array
+    population = np.random.randint(2, size=(population_size, X.shape[1]))
 
     for generation in range(num_generations):
         print("Generation:", generation + 1)
@@ -206,19 +197,11 @@ def select_best_network(individuals, X_train, y_train):
     return best_network
 
 
-# best_network = select_best_network(best_individuals, X_train, y_train)
-best_individuals = genetic_algorithm(X_train, y_train, population_size, mutation_rate, crossover_rate, num_generations)
-best_network = select_best_network(best_individuals, X_train, y_train)
-
-
 # Step 10: Evaluate Performance on the Test Set
 def evaluate_performance(network, X, y):
     # Implement your neural network model here
     # Load the trained network from the best_individuals or wnet file
-
-    # Unpack the network weights
     W1, b1, W2, b2 = network
-
     # Implement the forward propagation step to make predictions on the test set
     Z1 = np.dot(X, W1) + b1
     A1 = sigmoid(Z1)
@@ -236,7 +219,6 @@ def evaluate_performance(network, X, y):
 
     return accuracy, precision, recall, f1_score
 
-test_performance = evaluate_performance(best_network, X_test, y_test)
 
 # Step 11: Save the Trained Network
 def save_network(network, file_path):
@@ -257,5 +239,57 @@ def save_network(network, file_path):
     np.savez(file_path, **network_params)
 
 
-save_network(best_network, "wnet")
+train_file = "nn0.txt"
 
+X, y = load_data(train_file)
+
+# Split the data into training and test sets
+train_size = 15000
+X_train, X_test = X[:train_size], X[train_size:]
+y_train, y_test = y[:train_size], y[train_size:]
+
+# Step 2: Define the Genetic Algorithm
+population_size = 100
+mutation_rate = 0.01
+crossover_rate = 0.8
+num_generations = 50
+
+# Define the maximum number of layers and connections for the neural network
+max_layers = 5
+max_connections = 50
+
+best_individuals = genetic_algorithm(X_train, y_train, population_size, mutation_rate, crossover_rate, num_generations)
+best_network = select_best_network(best_individuals, X_train, y_train)
+test_performance = evaluate_performance(best_network, X_test, y_test)
+
+save_network(best_network, "wnet0")
+
+# 1. Data Preparation:
+#    - Load the data from the files nn0.txt and nn1.txt.
+#    - Each file contains 20,000 binary strings followed by a digit indicating legality.
+#    - Split the data into a training set and a test set according to your desired ratio
+#    (e.g., 15,000 for training and 5,000 for testing).
+# 2. Genetic Algorithm:
+#    - Define the structure of the neural network: the number of layers, number of neurons in each layer,
+#    and the connections between them.
+#    - Initialize a population of neural networks with random weights and structure.
+#    - Evaluate the fitness of each network in the population by training and testing them on the provided data.
+#    - Select the best-performing networks based on their fitness for reproduction.
+#    - Apply genetic operators such as crossover and mutation to generate a new population of networks.
+#    - Repeat the evaluation, selection, and reproduction steps for a certain number of generations or
+#    until convergence criteria are met.
+# 3. Neural Network Training:
+#    - Implement a training algorithm for the neural network using a supervised learning method such as backpropagation.
+#    - Use the training set to update the weights of the network iteratively.
+#    - Validate the network's performance on the test set during training to monitor overfitting and generalization.
+# 4. Save the Best Network:
+#    - After the genetic algorithm completes, select the best-performing network from the final population based
+#    on its fitness.
+#    - Save the network's structure and weights to a file (e.g., wnet) for future use.
+# 5. Network Evaluation:
+#    - Use the saved network to predict the legality of new binary strings.
+#    - Load the network structure and weights from the saved file.
+#    - Feed the binary strings into the network and observe the output predictions.
+# It's important to note that implementing a genetic algorithm for neural network training can be computationally
+# expensive and time-consuming. You may need to fine-tune the parameters of the genetic algorithm and experiment with
+# different network structures to achieve optimal results.
