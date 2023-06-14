@@ -51,21 +51,19 @@ def predict(network, X):
 
 
 # Step 3: Fitness Function
-def evaluate_fitness(network, X):
-    # Implement your neural network model here
-    # Load the trained network from the best_individuals or wnet file
+def calculate_fitness(network, X_train):
+    pass
+   # return accuracy
 
-    # Make predictions on the training data
-    predictions = predict(network, X)
 
-    # Calculate the accuracy
-    # accuracy = np.count_nonzero(predictions == y) / len(y)
-
-    return predictions
+def evaluate_fitness(network, X_train):
+    # Assuming you have a function to calculate the fitness of a network given the training data
+    fitness = calculate_fitness(network, X_train)
+    return fitness
 
 
 def select_parents(population, fitness_scores):
-    population_array = np.array(population)
+    population_array = np.array(population, dtype=object)
     fitness_scores_array = np.array(fitness_scores)
 
     probabilities = fitness_scores_array / np.sum(fitness_scores_array)
@@ -75,36 +73,40 @@ def select_parents(population, fitness_scores):
 
     parent_indices = np.random.choice(len(population), size=2, replace=False, p=probabilities)
 
-    parent1 = population_array[parent_indices[0]]
-    parent2 = population_array[parent_indices[1]]
+    parent1 = population_array[parent_indices[0]].tolist()
+    parent2 = population_array[parent_indices[1]].tolist()
 
     return parent1, parent2
 
 
 # Step 5: Crossover
-def perform_crossover(parent1, parent2):
+def perform_crossover(parent1, parent2, crossover_rate):
+    # Convert parent1 and parent2 to arrays
+    parent1 = np.array(parent1)
+    parent2 = np.array(parent2)
+
     # Select a crossover point
     crossover_point = np.random.randint(1, len(parent1))
-
-    # Perform crossover to create offspring
-    offspring = (
-        np.concatenate((parent1[:crossover_point], parent2[crossover_point:])),
-        np.concatenate((parent2[:crossover_point], parent1[crossover_point:]))
-    )
+    if np.random.rand() < crossover_rate:
+        # Perform crossover to create offspring
+        offspring = (
+            np.concatenate((parent1[:crossover_point], parent2[crossover_point:])),
+            np.concatenate((parent2[:crossover_point], parent1[crossover_point:]))
+        )
+    else:
+        offspring = parent1.copy()
 
     return offspring
 
 
-# Step 6: Mutation
-def perform_mutation(network):
-    # Mutation probability (adjust as needed)
-    mutation_prob = 0.01
 
+# Step 6: Mutation
+def perform_mutation(network, mutation_rate):
     # Extract the network weights
     W1, b1, W2, b2 = network
 
     # Mutate the network structure
-    if np.random.rand() < mutation_prob:
+    if np.random.rand() < mutation_rate:
         # Perform structure mutation (e.g., add/remove a hidden layer)
 
         # Example: Add a hidden layer
@@ -120,7 +122,7 @@ def perform_mutation(network):
         b1 = np.concatenate((b1, b_new))
 
     # Mutate the network weights
-    if np.random.rand() < mutation_prob:
+    if np.random.rand() < mutation_rate:
         # Perform weight mutation (e.g., add small random noise to the weights)
         noise_scale = 0.01  # Adjust the noise scale as needed
 
@@ -137,17 +139,18 @@ def perform_mutation(network):
 
 
 # Step 7: Repeat Steps 3-6
-def evolve_population(population, X_train):
+def evolve_population(population, X_train, mutation_rate, crossover_rate):
     fitness_scores = []
     for network in population:
         fitness = evaluate_fitness(network, X_train)
-        fitness_scores.append(fitness)
+        if fitness is not None:
+            fitness_scores.append(fitness)
 
     next_generation = []
     for _ in range(len(population)):
         parent1, parent2 = select_parents(population, fitness_scores)
-        offspring = perform_crossover(parent1, parent2)
-        offspring = perform_mutation(offspring)
+        offspring = perform_crossover(parent1, parent2, crossover_rate)
+        offspring = perform_mutation(offspring, mutation_rate)
         next_generation.append(offspring)
 
     return next_generation
@@ -168,7 +171,7 @@ def initialize_population(population_size):
         b2 = np.zeros(output_size)
 
         # Create the network variable
-        network = [W1, b1, W2, b2]
+        network = [np.array(W1), np.array(b1), np.array(W2), np.array(b2)]
 
         # Add the network to the population
         population.append(network)
@@ -177,13 +180,12 @@ def initialize_population(population_size):
 
 
 # Step 8: Termination (Using a fixed number of generations)
-def genetic_algorithm(X_train, y, population_size, mutation_rate, crossover_rate, num_generations):
-    # network_shape = (X.shape[1], 10, 1)  # Adjust the hidden layer size as needed
+def genetic_algorithm(data_train, population_size, mutation_rate, crossover_rate, num_generations):
     population = initialize_population(population_size)
 
     for generation in range(num_generations):
         print("Generation:", generation + 1)
-        population = evolve_population(population, X_train)
+        population = evolve_population(population, data_train, mutation_rate, crossover_rate)
 
     return population
 
@@ -258,7 +260,6 @@ if __name__ == '__main__':
     crossover_rate = 0.8
     num_generations = 50
 
-    population = initialize_population(population_size)
     # Define the maximum number of layers and connections for the neural network
     max_layers = 5
     max_connections = 50
@@ -272,8 +273,7 @@ if __name__ == '__main__':
 # 1. Data Preparation:
 #    - Load the data from the files nn0.txt and nn1.txt.
 #    - Each file contains 20,000 binary strings followed by a digit indicating legality.
-#    - Split the data into a training set and a test set according to your desired ratio
-#    (e.g., 15,000 for training and 5,000 for testing).
+#    - Split the data into a training set and a test set according to your desired ratio.
 # 2. Genetic Algorithm:
 #    - Define the structure of the neural network: the number of layers, number of neurons in each layer,
 #    and the connections between them.
