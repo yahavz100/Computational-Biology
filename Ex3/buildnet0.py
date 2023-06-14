@@ -3,11 +3,17 @@ import numpy as np
 
 # Step 1: Data Preparation
 def load_data(file_path):
-    # Load the data
-    data = np.loadtxt(file_path, dtype=int)
-    X = data[:, :-1]  # Extract the features (binary strings)
-    y = data[:, -1]  # Extract the labels (legality)
-    return X, y
+    data_pairs = []
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line and len(line) >= 17:
+                features = line[:16]
+                label = int(line[16:].strip())
+                data_pairs.append((features, label))
+
+    return data_pairs
 
 
 def sigmoid(x):
@@ -45,7 +51,7 @@ def predict(network, X):
 
 
 # Step 3: Fitness Function
-def evaluate_fitness(network, X, y):
+def evaluate_fitness(network, X):
     # Implement your neural network model here
     # Load the trained network from the best_individuals or wnet file
 
@@ -53,9 +59,9 @@ def evaluate_fitness(network, X, y):
     predictions = predict(network, X)
 
     # Calculate the accuracy
-    accuracy = np.count_nonzero(predictions == y) / len(y)
+    # accuracy = np.count_nonzero(predictions == y) / len(y)
 
-    return accuracy
+    return predictions
 
 
 def select_parents(population, fitness_scores):
@@ -131,10 +137,10 @@ def perform_mutation(network):
 
 
 # Step 7: Repeat Steps 3-6
-def evolve_population(population, X_train, y_train):
+def evolve_population(population, X_train):
     fitness_scores = []
     for network in population:
-        fitness = evaluate_fitness(network, X_train, y_train)
+        fitness = evaluate_fitness(network, X_train)
         fitness_scores.append(fitness)
 
     next_generation = []
@@ -147,7 +153,7 @@ def evolve_population(population, X_train, y_train):
     return next_generation
 
 
-def initialize_population(population_size, network_shape):
+def initialize_population(population_size):
     population = []
     for _ in range(population_size):
         # Define the network architecture
@@ -171,25 +177,24 @@ def initialize_population(population_size, network_shape):
 
 
 # Step 8: Termination (Using a fixed number of generations)
-def genetic_algorithm(X, y, population_size, mutation_rate, crossover_rate, num_generations):
+def genetic_algorithm(X_train, y, population_size, mutation_rate, crossover_rate, num_generations):
     # network_shape = (X.shape[1], 10, 1)  # Adjust the hidden layer size as needed
-    # Initialize population as a 2D NumPy array
-    population = np.random.randint(2, size=(population_size, X.shape[1]))
+    population = initialize_population(population_size)
 
     for generation in range(num_generations):
         print("Generation:", generation + 1)
-        population = evolve_population(population, X_train, y_train)
+        population = evolve_population(population, X_train)
 
     return population
 
 
 # Step 9: Retrieve the Best Individual
-def select_best_network(individuals, X_train, y_train):
+def select_best_network(individuals, X_train):
     best_network = None
     best_fitness = -1
 
     for network in individuals:
-        fitness = evaluate_fitness(network, X_train, y_train)
+        fitness = evaluate_fitness(network, X_train)
         if fitness > best_fitness:
             best_fitness = fitness
             best_network = network
@@ -198,7 +203,7 @@ def select_best_network(individuals, X_train, y_train):
 
 
 # Step 10: Evaluate Performance on the Test Set
-def evaluate_performance(network, X, y):
+def evaluate_performance(network, X):
     # Implement your neural network model here
     # Load the trained network from the best_individuals or wnet file
     W1, b1, W2, b2 = network
@@ -212,12 +217,12 @@ def evaluate_performance(network, X, y):
     binary_predictions = (A2 >= 0.5).astype(int)
 
     # Calculate and return performance metrics (e.g., accuracy, precision, recall, F1 score)
-    accuracy = np.mean(binary_predictions == y)
-    precision = np.sum(binary_predictions * y) / np.sum(binary_predictions)
-    recall = np.sum(binary_predictions * y) / np.sum(y)
-    f1_score = 2 * (precision * recall) / (precision + recall)
+    # accuracy = np.mean(binary_predictions == y)
+    # precision = np.sum(binary_predictions * y) / np.sum(binary_predictions)
+    # recall = np.sum(binary_predictions * y) / np.sum(y)
+    # f1_score = 2 * (precision * recall) / (precision + recall)
 
-    return accuracy, precision, recall, f1_score
+    # return accuracy, precision, recall, f1_score
 
 
 # Step 11: Save the Trained Network
@@ -239,30 +244,30 @@ def save_network(network, file_path):
     np.savez(file_path, **network_params)
 
 
-train_file = "nn0.txt"
+if __name__ == '__main__':
+    train_file = "nn0.txt"
+    data = load_data(train_file)
 
-X, y = load_data(train_file)
+    # Split the data into training and test sets
+    train_size = 15000
+    X_train, X_test = data[:train_size], data[train_size:]
 
-# Split the data into training and test sets
-train_size = 15000
-X_train, X_test = X[:train_size], X[train_size:]
-y_train, y_test = y[:train_size], y[train_size:]
+    # Step 2: Define the Genetic Algorithm
+    population_size = 100
+    mutation_rate = 0.01
+    crossover_rate = 0.8
+    num_generations = 50
 
-# Step 2: Define the Genetic Algorithm
-population_size = 100
-mutation_rate = 0.01
-crossover_rate = 0.8
-num_generations = 50
+    population = initialize_population(population_size)
+    # Define the maximum number of layers and connections for the neural network
+    max_layers = 5
+    max_connections = 50
 
-# Define the maximum number of layers and connections for the neural network
-max_layers = 5
-max_connections = 50
+    best_individuals = genetic_algorithm(X_train, population_size, mutation_rate, crossover_rate, num_generations)
+    best_network = select_best_network(best_individuals, X_train)
+    # test_performance = evaluate_performance(best_network, X_test)
 
-best_individuals = genetic_algorithm(X_train, y_train, population_size, mutation_rate, crossover_rate, num_generations)
-best_network = select_best_network(best_individuals, X_train, y_train)
-test_performance = evaluate_performance(best_network, X_test, y_test)
-
-save_network(best_network, "wnet0")
+    save_network(best_network, "wnet0")
 
 # 1. Data Preparation:
 #    - Load the data from the files nn0.txt and nn1.txt.
