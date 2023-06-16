@@ -99,7 +99,6 @@ def perform_crossover(parent1, parent2, crossover_rate):
     return offspring
 
 
-
 # Step 6: Mutation
 def perform_mutation(network, mutation_rate):
     # Extract the network weights
@@ -291,10 +290,6 @@ if __name__ == '__main__':
 #    - After the genetic algorithm completes, select the best-performing network from the final population based
 #    on its fitness.
 #    - Save the network's structure and weights to a file (e.g., wnet) for future use.
-# 5. Network Evaluation:
-#    - Use the saved network to predict the legality of new binary strings.
-#    - Load the network structure and weights from the saved file.
-#    - Feed the binary strings into the network and observe the output predictions.
 # It's important to note that implementing a genetic algorithm for neural network training can be computationally
 # expensive and time-consuming. You may need to fine-tune the parameters of the genetic algorithm and experiment with
 # different network structures to achieve optimal results.
