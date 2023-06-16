@@ -202,30 +202,6 @@ def select_best_network(individuals, X_train):
 
     return best_network
 
-
-# Step 10: Evaluate Performance on the Test Set
-def evaluate_performance(network, X):
-    # Implement your neural network model here
-    # Load the trained network from the best_individuals or wnet file
-    W1, b1, W2, b2 = network
-    # Implement the forward propagation step to make predictions on the test set
-    Z1 = np.dot(X, W1) + b1
-    A1 = sigmoid(Z1)
-    Z2 = np.dot(A1, W2) + b2
-    A2 = sigmoid(Z2)
-
-    # Apply a threshold of 0.5 to convert predictions to binary values
-    binary_predictions = (A2 >= 0.5).astype(int)
-
-    # Calculate and return performance metrics (e.g., accuracy, precision, recall, F1 score)
-    # accuracy = np.mean(binary_predictions == y)
-    # precision = np.sum(binary_predictions * y) / np.sum(binary_predictions)
-    # recall = np.sum(binary_predictions * y) / np.sum(y)
-    # f1_score = 2 * (precision * recall) / (precision + recall)
-
-    # return accuracy, precision, recall, f1_score
-
-
 # Step 11: Save the Trained Network
 def save_network(network, file_path):
     # Save the network structure and weights to a file
@@ -265,7 +241,6 @@ if __name__ == '__main__':
 
     best_individuals = genetic_algorithm(X_train, population_size, mutation_rate, crossover_rate, num_generations)
     best_network = select_best_network(best_individuals, X_train)
-    # test_performance = evaluate_performance(best_network, X_test)
 
     save_network(best_network, "wnet0")
 
