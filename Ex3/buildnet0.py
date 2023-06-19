@@ -154,7 +154,7 @@ def initialize_population(size_of_population):
         # Define the network architecture
         input_size = 10
         hidden_size = 10  # one layer
-        output_size = 2
+        output_size = 1
 
         # Initialize weights and biases
         W1 = np.random.randn(input_size, hidden_size)
