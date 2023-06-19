@@ -47,14 +47,16 @@ def calculate_fitness(network, train_set):
     correct_predictions = 0
 
     for input_data, target_output in train_set:
-        predicted_output = predict(network, input_data)
-        predicted_class = np.argmax(predicted_output)
-        target_class = np.argmax(target_output)
-
-        if predicted_class == target_class:
+        output = predict(network, input_data)
+        if output > 0.5:
+            predicted_class = 1
+        else:
+            predicted_class = 0
+        if predicted_class == target_output:
             correct_predictions += 1
 
     accuracy = correct_predictions / len(train_set)
+    # print(accuracy)
     fitness = accuracy  # Use accuracy as the fitness metric
 
     return fitness
@@ -136,8 +138,8 @@ def perform_mutation(network):
 # Step 7: Repeat Steps 3-6
 def evolve_population(population, train_set):
     fitness_scores = []
-    # for network in population:
-    #     fitness = calculate_fitness(network, train_set)
+    for network in population:
+        fitness = calculate_fitness(network, train_set)
 
     next_generation = []
     next_generation = population
