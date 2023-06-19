@@ -1,6 +1,6 @@
 import numpy as np
 
-
+#
 # Step 1: Data Preparation
 def load_data(file_path):
     data_pairs = []
