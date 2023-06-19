@@ -80,7 +80,7 @@ def perform_crossover(parent1, parent2, crossover_rate):
 
         if np.random.rand() < crossover_rate:
             # Perform crossover between gene1 and gene2
-            crossover_point = np.random.randint(1, len(gene1))
+            crossover_point = np.random.randint(1, len(gene1) + 1)
             new_gene = np.concatenate((gene1[:crossover_point], gene2[crossover_point:]))
         else:
             new_gene = gene1.copy()
@@ -152,7 +152,7 @@ def initialize_population(size_of_population):
     population = []
     for _ in range(size_of_population):
         # Define the network architecture
-        input_size = 10
+        input_size = 16
         hidden_size = 10  # one layer
         output_size = 1
 
