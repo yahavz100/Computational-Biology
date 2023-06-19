@@ -22,17 +22,20 @@ def load_data(file_path):
 
 def sigmoid(x):
     # Apply sigmoid activation function to the input x
-    # Limit the input values to avoid overflow error
-    x = np.clip(x, -500, 500)  # Adjust the range as needed
     return 1 / (1 + np.exp(-x))
 
 
 def predict(network, X):
     W1, b1, W2, b2 = network  # Unpack the network values
-    # Convert input data to float data type
-    X = X.astype(float)
+
+    # Convert X to a NumPy array
+    X_array = np.array(list(X), dtype=np.float32)
+
+    # Reshape X_array if necessary
+    X_array = X_array.reshape(1, -1)  # Assuming X is a single sample
+
     # Perform the prediction using the weights and biases
-    Z1 = np.dot(X, W1) + b1
+    Z1 = np.dot(X_array, W1) + b1
     A1 = sigmoid(Z1)
     Z2 = np.dot(A1, W2) + b2
     A2 = sigmoid(Z2)
@@ -44,7 +47,6 @@ def calculate_fitness(network, train_set):
     correct_predictions = 0
 
     for input_data, target_output in train_set:
-        input_data = np.array(input_data, dtype=float)  # Convert input_data to numeric array
         predicted_output = predict(network, input_data)
         predicted_class = np.argmax(predicted_output)
         target_class = np.argmax(target_output)
