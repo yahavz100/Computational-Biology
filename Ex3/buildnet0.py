@@ -237,7 +237,7 @@ if __name__ == '__main__':
     best_network = select_best_network(best_individuals, X_train)
 
     save_network(best_network, "wnet0")
-
+#
 # 1. Data Preparation:
 #    - Load the data from the files nn0.txt and nn1.txt.
 #    - Each file contains 20,000 binary strings followed by a digit indicating legality.
