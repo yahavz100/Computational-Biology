@@ -23,15 +23,6 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def initialize_weights(input_size, hidden_size, output_size):
-    # Initialize random weights for the neural network
-    W1 = np.random.randn(input_size, hidden_size)
-    b1 = np.zeros(hidden_size)
-    W2 = np.random.randn(hidden_size, output_size)
-    b2 = np.zeros(output_size)
-    return W1, b1, W2, b2
-
-
 def forward_propagation(X, W1, b1, W2, b2):
     # Perform forward propagation through the neural network
     Z1 = np.dot(X, W1) + b1
@@ -51,14 +42,20 @@ def predict(network, X):
 
 
 # Step 3: Fitness Function
-def calculate_fitness(network, X_train):
-    pass
-   # return accuracy
+def calculate_fitness(network, train_set):
+    correct_predictions = 0
 
+    for input_data, target_output in train_set:
+        predicted_output = predict(network, input_data)
+        predicted_class = np.argmax(predicted_output)
+        target_class = np.argmax(target_output)
 
-def evaluate_fitness(network, X_train):
-    # Assuming you have a function to calculate the fitness of a network given the training data
-    fitness = calculate_fitness(network, X_train)
+        if predicted_class == target_class:
+            correct_predictions += 1
+
+    accuracy = correct_predictions / len(train_set)
+    fitness = accuracy  # Use accuracy as the fitness metric
+
     return fitness
 
 
@@ -138,10 +135,10 @@ def perform_mutation(network, mutation_rate):
 
 
 # Step 7: Repeat Steps 3-6
-def evolve_population(population, X_train, mutation_rate, crossover_rate):
+def evolve_population(population, train_set, mutation_rate, crossover_rate):
     fitness_scores = []
     for network in population:
-        fitness = evaluate_fitness(network, X_train)
+        fitness = calculate_fitness(network, train_set)
         if fitness is not None:
             fitness_scores.append(fitness)
 
@@ -160,7 +157,7 @@ def initialize_population(population_size):
     for _ in range(population_size):
         # Define the network architecture
         input_size = 10
-        hidden_size = 5
+        hidden_size = 5  # one layer
         output_size = 2
 
         # Initialize weights and biases
@@ -195,12 +192,13 @@ def select_best_network(individuals, X_train):
     best_fitness = -1
 
     for network in individuals:
-        fitness = evaluate_fitness(network, X_train)
+        fitness = calculate_fitness(network, X_train)
         if fitness > best_fitness:
             best_fitness = fitness
             best_network = network
 
     return best_network
+
 
 # Step 11: Save the Trained Network
 def save_network(network, file_path):
@@ -236,8 +234,8 @@ if __name__ == '__main__':
     num_generations = 50
 
     # Define the maximum number of layers and connections for the neural network
-    max_layers = 5
-    max_connections = 50
+    # max_layers = 5
+    # max_connections = 50
 
     best_individuals = genetic_algorithm(X_train, population_size, mutation_rate, crossover_rate, num_generations)
     best_network = select_best_network(best_individuals, X_train)
