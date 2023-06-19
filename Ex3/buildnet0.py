@@ -23,8 +23,11 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
-def forward_propagation(X, W1, b1, W2, b2):
-    # Perform forward propagation through the neural network
+def predict(network, X):
+    W1, b1, W2, b2 = network  # Unpack the network values
+    # Convert input data to float data type
+    X = X.astype(float)
+    # Perform the prediction using the weights and biases
     Z1 = np.dot(X, W1) + b1
     A1 = sigmoid(Z1)
     Z2 = np.dot(A1, W2) + b2
@@ -32,20 +35,12 @@ def forward_propagation(X, W1, b1, W2, b2):
     return A2
 
 
-def predict(network, X):
-    W, b = network  # Unpack the network values (assuming two values)
-    # Perform the prediction using the weights and biases
-    # Adjust the implementation according to your specific network architecture
-    Z = np.dot(X, W) + b
-    A = sigmoid(Z)  # Apply the appropriate activation function
-    return A
-
-
 # Step 3: Fitness Function
 def calculate_fitness(network, train_set):
     correct_predictions = 0
 
     for input_data, target_output in train_set:
+        input_data = np.array(input_data, dtype=float)  # Convert input_data to numeric array
         predicted_output = predict(network, input_data)
         predicted_class = np.argmax(predicted_output)
         target_class = np.argmax(target_output)
@@ -78,20 +73,19 @@ def select_parents(population, fitness_scores):
 
 # Step 5: Crossover
 def perform_crossover(parent1, parent2, crossover_rate):
-    # Convert parent1 and parent2 to arrays
-    parent1 = np.array(parent1)
-    parent2 = np.array(parent2)
+    offspring = []
+    for gene1, gene2 in zip(parent1, parent2):
+        gene1 = np.array(gene1)
+        gene2 = np.array(gene2)
 
-    # Select a crossover point
-    crossover_point = np.random.randint(1, len(parent1))
-    if np.random.rand() < crossover_rate:
-        # Perform crossover to create offspring
-        offspring = (
-            np.concatenate((parent1[:crossover_point], parent2[crossover_point:])),
-            np.concatenate((parent2[:crossover_point], parent1[crossover_point:]))
-        )
-    else:
-        offspring = parent1.copy()
+        if np.random.rand() < crossover_rate:
+            # Perform crossover between gene1 and gene2
+            crossover_point = np.random.randint(1, len(gene1))
+            new_gene = np.concatenate((gene1[:crossover_point], gene2[crossover_point:]))
+        else:
+            new_gene = gene1.copy()
+
+        offspring.append(new_gene)
 
     return offspring
 
@@ -105,16 +99,18 @@ def perform_mutation(network, mutation_rate):
     if np.random.rand() < mutation_rate:
         # Perform structure mutation (e.g., add/remove a hidden layer)
 
-        # Example: Add a hidden layer
         # Determine the new hidden layer size
         new_hidden_size = np.random.randint(10, 100)
 
+        # Transpose W1
+        W1 = W1.T
+
         # Add a new hidden layer with random weights
-        W_new = np.random.randn(W1.shape[1], new_hidden_size)
+        W_new = np.random.randn(new_hidden_size, W1.shape[1])
         b_new = np.zeros(new_hidden_size)
 
         # Concatenate the new hidden layer with the existing weights
-        W1 = np.concatenate((W1, W_new), axis=1)
+        W1 = np.concatenate((W1, W_new.T), axis=1)
         b1 = np.concatenate((b1, b_new))
 
     # Mutate the network weights
@@ -152,12 +148,12 @@ def evolve_population(population, train_set, mutation_rate, crossover_rate):
     return next_generation
 
 
-def initialize_population(population_size):
+def initialize_population(size_of_population):
     population = []
-    for _ in range(population_size):
+    for _ in range(size_of_population):
         # Define the network architecture
         input_size = 10
-        hidden_size = 5  # one layer
+        hidden_size = 10  # one layer
         output_size = 2
 
         # Initialize weights and biases
@@ -176,8 +172,8 @@ def initialize_population(population_size):
 
 
 # Step 8: Termination (Using a fixed number of generations)
-def genetic_algorithm(data_train, population_size, mutation_rate, crossover_rate, num_generations):
-    population = initialize_population(population_size)
+def genetic_algorithm(data_train, size_of_population, mutation_rate, crossover_rate, num_generations):
+    population = initialize_population(size_of_population)
 
     for generation in range(num_generations):
         print("Generation:", generation + 1)
@@ -187,12 +183,12 @@ def genetic_algorithm(data_train, population_size, mutation_rate, crossover_rate
 
 
 # Step 9: Retrieve the Best Individual
-def select_best_network(individuals, X_train):
+def select_best_network(individuals, train_set):
     best_network = None
     best_fitness = -1
 
     for network in individuals:
-        fitness = calculate_fitness(network, X_train)
+        fitness = calculate_fitness(network, train_set)
         if fitness > best_fitness:
             best_fitness = fitness
             best_network = network
@@ -215,7 +211,7 @@ def save_network(network, file_path):
         'b2': b2
     }
 
-    # Save the network parameters to the file using NumPy's savez function
+    # Save the network parameters to the file using NumPy's saves function
     np.savez(file_path, **network_params)
 
 
