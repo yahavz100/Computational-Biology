@@ -2,7 +2,7 @@ import numpy as np
 
 NUM_GENERATIONS = 10
 POPULATION_SIZE = 20
-MUTATION_RATE = 0.01
+MUTATION_RATE = 0.1
 
 
 # Step 1: Data Preparation
@@ -101,35 +101,15 @@ def perform_crossover(parent1, parent2):
 def perform_mutation(network):
     # Extract the network weights
     W1, b1, W2, b2 = network
-
-    # Mutate the network structure
-    if np.random.rand() < MUTATION_RATE:
-        # Perform structure mutation (e.g., add/remove a hidden layer)
-
-        # Determine the new hidden layer size
-        new_hidden_size = np.random.randint(10, 100)
-
-        # Transpose W1
-        W1 = W1.T
-
-        # Add a new hidden layer with random weights
-        W_new = np.random.randn(new_hidden_size, W1.shape[1])
-        b_new = np.zeros(new_hidden_size)
-
-        # Concatenate the new hidden layer with the existing weights
-        W1 = np.concatenate((W1, W_new.T), axis=1)
-        b1 = np.concatenate((b1, b_new))
-
-    # Mutate the network weights
-    if np.random.rand() < MUTATION_RATE:
-        # Perform weight mutation (e.g., add small random noise to the weights)
-        noise_scale = 0.01  # Adjust the noise scale as needed
-
-        # Add small random noise to the network weights
-        W1 += np.random.randn(*W1.shape) * noise_scale
-        b1 += np.random.randn(*b1.shape) * noise_scale
-        W2 += np.random.randn(*W2.shape) * noise_scale
-        b2 += np.random.randn(*b2.shape) * noise_scale
+    # print(network)
+    for i in network:
+        # Mutate the network weights
+        if np.random.rand() < MUTATION_RATE:
+            # Perform weight mutation
+            i += np.random.randn(*i.shape)
+            # b1 += np.random.randn(*b1.shape)
+            # W2 += np.random.randn(*W2.shape)
+            # b2 += np.random.randn(*b2.shape)
 
     # Construct the mutated network
     mutated_network = [W1, b1, W2, b2]
@@ -145,14 +125,15 @@ def evolve_population(population, train_set):
         fitness_scores.append(fitness)
 
     next_generation = []
-    next_generation = population
+    # next_generation = population
     for _ in range(len(population)):
         parent1, parent2 = select_parents(population, fitness_scores)
         offspring = perform_crossover(parent1, parent2)
-        # offspring = perform_mutation(offspring)
-        # next_generation.append(offspring)
+        offspring = perform_mutation(offspring)
+        next_generation.append(offspring)
 
-    return next_generation
+    population.extend(next_generation)
+    return population
 
 
 def initialize_population():
