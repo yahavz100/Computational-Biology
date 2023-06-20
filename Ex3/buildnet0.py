@@ -2,7 +2,7 @@ import numpy as np
 
 NUM_GENERATIONS = 10
 POPULATION_SIZE = 20
-MUTATION_RATE = 0.1
+MUTATION_RATE = 0.05
 
 
 # Step 1: Data Preparation
@@ -119,20 +119,29 @@ def perform_mutation(network):
 
 # Step 7: Repeat Steps 3-6
 def evolve_population(population, train_set):
-    fitness_scores = []
-    for network in population:
-        fitness = calculate_fitness(network, train_set)
-        fitness_scores.append(fitness)
-
-    next_generation = []
-    # next_generation = population
-    for _ in range(len(population)):
+    fitness_scores = [calculate_fitness(network, train_set) for network in population]
+    for _ in range(POPULATION_SIZE):
         parent1, parent2 = select_parents(population, fitness_scores)
         offspring = perform_crossover(parent1, parent2)
         offspring = perform_mutation(offspring)
-        next_generation.append(offspring)
 
-    population.extend(next_generation)
+        # Calculate fitness for each offspring
+        population.append(offspring)
+        fitness_scores.append(calculate_fitness(offspring, train_set))
+
+        # Combine the population and fitness scores using zip
+        combined = zip(population, fitness_scores)
+
+        # Sort the combined list based on fitness scores in descending order
+        combined_sorted = sorted(combined, key=lambda x: x[1], reverse=True)
+        combined_sorted = combined_sorted[:POPULATION_SIZE]
+
+        # Separate the sorted population and fitness scores
+        sorted_population, sorted_fitness_scores = zip(*combined_sorted)
+
+        population = list(sorted_population)
+        fitness_scores = list(sorted_fitness_scores)
+
     return population
 
 
