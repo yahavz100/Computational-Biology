@@ -165,7 +165,6 @@ def evolve_population(train_set):
             if offspring_fitness > best_fitness:
                 best_fitness = offspring_fitness
                 best_network = offspring
-                print(best_fitness)
 
         # Check for early convergence
         if best_fitness > best_fitness_threshold:
