@@ -197,6 +197,7 @@ def evolve_population(train_set):
         fitness_scores = list(sorted_fitness_scores)
 
     # Return the best network found
+    print("best network fitness:", best_fitness)
     return best_network
 
 
