@@ -1,8 +1,9 @@
 import numpy as np
 
 NUM_GENERATIONS = 10
-POPULATION_SIZE = 20
+POPULATION_SIZE = 50
 MUTATION_RATE = 0.05
+EARLY_CONVERGE = 0.25
 
 
 # Step 1: Data Preparation
@@ -119,11 +120,14 @@ def perform_mutation(network):
 
 # Step 7: Repeat Steps 3-6
 def evolve_population(train_set):
-    best_network = None
-    best_fitness = -1
     population = initialize_population()
-
     fitness_scores = [calculate_fitness(network, train_set) for network in population]
+    initialized_pop = sorted(zip(population, fitness_scores), key=lambda x: x[1], reverse=True)
+    best_network = initialized_pop[0][0]
+    best_fitness = initialized_pop[0][1]
+    generations_without_improvement = 0
+    best_fitness_threshold = 0
+
     for i in range(NUM_GENERATIONS):
         print("Generation:", i + 1)
         next_generation = []
@@ -144,6 +148,17 @@ def evolve_population(train_set):
                 best_fitness = offspring_fitness
                 print(best_fitness)
                 best_network = offspring
+
+        # Check early convergence
+        if best_fitness > best_fitness_threshold:
+            generations_without_improvement = 0
+            best_fitness_threshold = best_fitness
+        else:
+            generations_without_improvement += 1
+
+        if generations_without_improvement > (NUM_GENERATIONS // 4):
+            print("Early convergence")
+            return best_network
 
         # Combine the current population, next generation, and their fitness scores
         combined_population = population + next_generation
