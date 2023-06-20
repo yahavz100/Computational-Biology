@@ -1,10 +1,18 @@
 import numpy as np
 
 
+def sigmoid(x):
+    # Sigmoid activation function
+    return 1 / (1 + np.exp(-x))
+
+
 def runnet(wnet_file, data_file, output_file):
     # Load the network parameters from the wnet file
     network_params = np.load(wnet_file)
-    network_structure = dict(network_params)
+    W1 = network_params['W1']
+    b1 = network_params['b1']
+    W2 = network_params['W2']
+    b2 = network_params['b2']
 
     # Load the data from the data file
     with open(data_file, 'r') as file:
@@ -15,16 +23,11 @@ def runnet(wnet_file, data_file, output_file):
     for string in data:
         # Perform feedforward propagation to classify the string
         input_layer = np.array([int(char) for char in string])  # Convert the string to a binary input array
-        hidden_layer = input_layer
-        for layer_num in range(1, len(network_structure) // 2):
-            W = network_structure['W' + str(layer_num)]
-            b = network_structure['b' + str(layer_num)]
-            hidden_layer = np.maximum(0, np.dot(W, hidden_layer) + b)
-        output_layer = np.dot(network_structure['W' + str(len(network_structure) // 2)],
-                              hidden_layer) + network_structure['b' + str(len(network_structure) // 2)]
+        hidden_layer = sigmoid(np.dot(input_layer, W1) + b1)
+        output_layer = sigmoid(np.dot(hidden_layer, W2) + b2)
 
         # Determine the predicted class based on the output layer
-        classification = np.argmax(output_layer)
+        classification = 1 if output_layer > 0.5 else 0
 
         classifications.append(classification)
 
@@ -35,6 +38,7 @@ def runnet(wnet_file, data_file, output_file):
 
 if __name__ == '__main__':
     wnet_file = "wnet0.npz"
-    data_file = "testnet0.txt"
+    data_file = "testnet0No17byte.txt"
     output_file = "output.txt"
     runnet(wnet_file, data_file, output_file)
+    print("done")
