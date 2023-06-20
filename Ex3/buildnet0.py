@@ -1,7 +1,7 @@
 import numpy as np
 
-NUM_GENERATIONS = 50
-POPULATION_SIZE = 100
+NUM_GENERATIONS = 10
+POPULATION_SIZE = 20
 MUTATION_RATE = 0.01
 
 
@@ -66,12 +66,14 @@ def select_parents(population, fitness_scores):
     population_array = np.array(population, dtype=object)
     fitness_scores_array = np.array(fitness_scores)
 
+    # Calculate selection probabilities based on fitness scores
     probabilities = fitness_scores_array / np.sum(fitness_scores_array)
 
     if np.isnan(probabilities).any() or np.sum(fitness_scores_array) == 0:
         probabilities = np.ones(len(population)) / len(population)
 
-    parent_indices = np.random.choice(len(population), size=2, replace=False, p=probabilities)
+    # Select parents using Roulette Wheel Selection
+    parent_indices = np.random.choice(len(population), size=2, replace=True, p=probabilities)
 
     parent1 = population_array[parent_indices[0]].tolist()
     parent2 = population_array[parent_indices[1]].tolist()
@@ -140,13 +142,14 @@ def evolve_population(population, train_set):
     fitness_scores = []
     for network in population:
         fitness = calculate_fitness(network, train_set)
+        fitness_scores.append(fitness)
 
     next_generation = []
     next_generation = population
-    # for _ in range(len(population)):
-        # parent1, parent2 = select_parents(population, fitness_scores)
-        # offspring = perform_crossover(parent1, parent2, crossover_rate)
-        # offspring = perform_mutation(offspring, mutation_rate)
+    for _ in range(len(population)):
+        parent1, parent2 = select_parents(population, fitness_scores)
+        offspring = perform_crossover(parent1, parent2)
+        # offspring = perform_mutation(offspring)
         # next_generation.append(offspring)
 
     return next_generation
@@ -227,15 +230,12 @@ if __name__ == '__main__':
     train_size = 15000
     X_train, X_test = data[:train_size], data[train_size:]
 
-    # Define the maximum number of layers and connections for the neural network
-    # max_layers = 5
-    # max_connections = 50
-
     best_individuals = genetic_algorithm(X_train)
+
+    best_network = select_best_network(best_individuals, X_train)
+
+    save_network(best_network, "wnet0")
     print("done")
-    # best_network = select_best_network(best_individuals, X_train)
-    #
-    # save_network(best_network, "wnet0")
 
 # 1. Data Preparation:
 #    - Load the data from the files nn0.txt and nn1.txt.
