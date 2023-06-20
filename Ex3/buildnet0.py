@@ -1,8 +1,9 @@
 import numpy as np
 
-NUM_GENERATIONS = 10
-POPULATION_SIZE = 20
-MUTATION_RATE = 0.1
+NUM_GENERATIONS = 20
+POPULATION_SIZE = 50
+MUTATION_RATE = 0.05
+EARLY_CONVERGE = 0.25
 
 
 # Step 1: Data Preparation
@@ -118,22 +119,91 @@ def perform_mutation(network):
 
 
 # Step 7: Repeat Steps 3-6
-def evolve_population(population, train_set):
-    fitness_scores = []
-    for network in population:
-        fitness = calculate_fitness(network, train_set)
-        fitness_scores.append(fitness)
+def evolve_population(train_set):
+    # Initialize the population
+    population = initialize_population()
 
-    next_generation = []
-    # next_generation = population
-    for _ in range(len(population)):
-        parent1, parent2 = select_parents(population, fitness_scores)
-        offspring = perform_crossover(parent1, parent2)
-        offspring = perform_mutation(offspring)
-        next_generation.append(offspring)
+    # Calculate fitness scores for each network in the population
+    fitness_scores = [calculate_fitness(network, train_set) for network in population]
 
-    population.extend(next_generation)
-    return population
+    # Sort the population based on fitness scores in descending order
+    initialized_pop = sorted(zip(population, fitness_scores), key=lambda x: x[1], reverse=True)
+
+    # Select the best network as the initial best network
+    best_network = initialized_pop[0][0]
+    best_fitness = initialized_pop[0][1]
+
+    # Counter to keep track of generations without improvement
+    generations_without_improvement = 0
+
+    # Best fitness threshold to track improvement
+    best_fitness_threshold = best_fitness
+
+    # Iterate over the specified number of generations
+    for i in range(NUM_GENERATIONS):
+        print("Generation:", i + 1)
+
+        # Create lists for the next generation
+        next_generation = []
+        next_generation_fitness = []
+
+        # Generate offspring for the next generation
+        for _ in range(POPULATION_SIZE):
+            # Select parents for crossover
+            parent1, parent2 = select_parents(population, fitness_scores)
+
+            # Perform crossover to create offspring
+            offspring = perform_crossover(parent1, parent2)
+
+            # Perform mutation on the offspring
+            offspring = perform_mutation(offspring)
+
+            # Calculate fitness for each offspring
+            offspring_fitness = calculate_fitness(offspring, train_set)
+
+            # Add offspring and its fitness to the next generation
+            next_generation.append(offspring)
+            next_generation_fitness.append(offspring_fitness)
+
+            # Update the best network if the offspring has higher fitness
+            if offspring_fitness > best_fitness:
+                best_fitness = offspring_fitness
+                best_network = offspring
+                print(best_fitness)
+
+        # Check for early convergence
+        if best_fitness > best_fitness_threshold:
+            generations_without_improvement = 0
+            best_fitness_threshold = best_fitness
+        else:
+            generations_without_improvement += 1
+
+        # Check if 25% of the generations have passed without improvement
+        if generations_without_improvement > (NUM_GENERATIONS // 4):
+            print("Early convergence")
+            return best_network
+
+        # Combine the current population, next generation, and their fitness scores
+        combined_population = population + next_generation
+        combined_fitness_scores = fitness_scores + next_generation_fitness
+
+        # Sort the combined population based on fitness scores in descending order
+        combined_sorted = sorted(zip(combined_population, combined_fitness_scores), key=lambda x: x[1], reverse=True)
+
+        # Keep only the top population size individuals for the next generation
+        combined_sorted = combined_sorted[:POPULATION_SIZE]
+
+        # Separate the sorted population and fitness scores
+        sorted_population, sorted_fitness_scores = zip(*combined_sorted)
+
+        # Convert the sorted population and fitness scores back to lists
+        population = list(sorted_population)
+        fitness_scores = list(sorted_fitness_scores)
+
+    # Return the best network found
+    return best_network
+
+
 
 
 def initialize_population():
@@ -157,31 +227,6 @@ def initialize_population():
         population.append(network)
 
     return population
-
-
-# Step 8: Termination (Using a fixed number of generations)
-def genetic_algorithm(data_train):
-    population = initialize_population()
-
-    for generation in range(NUM_GENERATIONS):
-        print("Generation:", generation + 1)
-        population = evolve_population(population, data_train)
-
-    return population
-
-
-# Step 9: Retrieve the Best Individual
-def select_best_network(individuals, train_set):
-    best_network = None
-    best_fitness = -1
-
-    for network in individuals:
-        fitness = calculate_fitness(network, train_set)
-        if fitness > best_fitness:
-            best_fitness = fitness
-            best_network = network
-
-    return best_network
 
 
 # Step 11: Save the Trained Network
@@ -211,9 +256,7 @@ if __name__ == '__main__':
     train_size = 15000
     X_train, X_test = data[:train_size], data[train_size:]
 
-    best_individuals = genetic_algorithm(X_train)
-
-    best_network = select_best_network(best_individuals, X_train)
+    best_network = evolve_population(X_train)
 
     save_network(best_network, "wnet0")
     print("done")
