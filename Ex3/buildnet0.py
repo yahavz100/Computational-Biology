@@ -1,8 +1,8 @@
 import numpy as np
 
-NUM_GENERATIONS = 20
-POPULATION_SIZE = 50
-MUTATION_RATE = 0.05
+NUM_GENERATIONS = 150
+POPULATION_SIZE = 100
+MUTATION_RATE = 0.1
 EARLY_CONVERGE = 0.25
 
 
@@ -169,7 +169,7 @@ def evolve_population(train_set):
             if offspring_fitness > best_fitness:
                 best_fitness = offspring_fitness
                 best_network = offspring
-                print(best_fitness)
+                # print(best_fitness)
 
         # Check for early convergence
         if best_fitness > best_fitness_threshold:
@@ -204,14 +204,12 @@ def evolve_population(train_set):
     return best_network
 
 
-
-
 def initialize_population():
     population = []
     for _ in range(POPULATION_SIZE):
         # Define the network architecture
         input_size = 16
-        hidden_size = 10
+        hidden_size = 12
         output_size = 1
 
         # Initialize weights and biases
@@ -257,6 +255,8 @@ if __name__ == '__main__':
     X_train, X_test = data[:train_size], data[train_size:]
 
     best_network = evolve_population(X_train)
+    final_accuracy = calculate_fitness(best_network, X_test)
+    print(final_accuracy)
 
     save_network(best_network, "wnet0")
     print("done")
