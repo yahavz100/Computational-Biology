@@ -4,9 +4,10 @@ NUM_GENERATIONS = 20
 POPULATION_SIZE = 50
 MUTATION_RATE = 0.05
 EARLY_CONVERGE = 0.25
+TRAIN_SIZE = 15000
 
 
-# Step 1: Data Preparation
+# Data Preparation
 def load_data(file_path):
     data_pairs = []
 
@@ -43,7 +44,7 @@ def predict(network, X):
     return A2
 
 
-# Step 3: Fitness Function
+# Fitness Function
 def calculate_fitness(network, train_set):
     correct_predictions = 0
 
@@ -57,7 +58,6 @@ def calculate_fitness(network, train_set):
             correct_predictions += 1
 
     accuracy = correct_predictions / len(train_set)
-    # print(accuracy)
     fitness = accuracy  # Use accuracy as the fitness metric
 
     return fitness
@@ -82,7 +82,7 @@ def select_parents(population, fitness_scores):
     return parent1, parent2
 
 
-# Step 5: Crossover
+# Crossover
 def perform_crossover(parent1, parent2):
     offspring = []
     for gene1, gene2 in zip(parent1, parent2):
@@ -98,19 +98,16 @@ def perform_crossover(parent1, parent2):
     return offspring
 
 
-# Step 6: Mutation
+# Mutation
 def perform_mutation(network):
     # Extract the network weights
     W1, b1, W2, b2 = network
-    # print(network)
+
     for i in network:
         # Mutate the network weights
         if np.random.rand() < MUTATION_RATE:
             # Perform weight mutation
             i += np.random.randn(*i.shape)
-            # b1 += np.random.randn(*b1.shape)
-            # W2 += np.random.randn(*W2.shape)
-            # b2 += np.random.randn(*b2.shape)
 
     # Construct the mutated network
     mutated_network = [W1, b1, W2, b2]
@@ -118,7 +115,6 @@ def perform_mutation(network):
     return mutated_network
 
 
-# Step 7: Repeat Steps 3-6
 def evolve_population(train_set):
     # Initialize the population
     population = initialize_population()
@@ -204,8 +200,6 @@ def evolve_population(train_set):
     return best_network
 
 
-
-
 def initialize_population():
     population = []
     for _ in range(POPULATION_SIZE):
@@ -229,7 +223,7 @@ def initialize_population():
     return population
 
 
-# Step 11: Save the Trained Network
+# Save the Trained Network
 def save_network(network, file_path):
     # Save the network structure and weights to a file
 
@@ -253,35 +247,9 @@ if __name__ == '__main__':
     data = load_data(train_file)
 
     # Split the data into training and test sets
-    train_size = 15000
-    X_train, X_test = data[:train_size], data[train_size:]
+    X_train, X_test = data[:TRAIN_SIZE], data[TRAIN_SIZE:]
 
     best_network = evolve_population(X_train)
 
     save_network(best_network, "wnet0")
     print("done")
-
-# 1. Data Preparation:
-#    - Load the data from the files nn0.txt and nn1.txt.
-#    - Each file contains 20,000 binary strings followed by a digit indicating legality.
-#    - Split the data into a training set and a test set according to your desired ratio.
-# 2. Genetic Algorithm:
-#    - Define the structure of the neural network: the number of layers, number of neurons in each layer,
-#    and the connections between them.
-#    - Initialize a population of neural networks with random weights and structure.
-#    - Evaluate the fitness of each network in the population by training and testing them on the provided data.
-#    - Select the best-performing networks based on their fitness for reproduction.
-#    - Apply genetic operators such as crossover and mutation to generate a new population of networks.
-#    - Repeat the evaluation, selection, and reproduction steps for a certain number of generations or
-#    until convergence criteria are met.
-# 3. Neural Network Training:
-#    - Implement a training algorithm for the neural network using a supervised learning method such as backpropagation.
-#    - Use the training set to update the weights of the network iteratively.
-#    - Validate the network's performance on the test set during training to monitor overfitting and generalization.
-# 4. Save the Best Network:
-#    - After the genetic algorithm completes, select the best-performing network from the final population based
-#    on its fitness.
-#    - Save the network's structure and weights to a file (e.g., wnet) for future use.
-# It's important to note that implementing a genetic algorithm for neural network training can be computationally
-# expensive and time-consuming. You may need to fine-tune the parameters of the genetic algorithm and experiment with
-# different network structures to achieve optimal results.
