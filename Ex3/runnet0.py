@@ -37,8 +37,7 @@ def runnet(wnet_file, data_file, output_file):
 
 
 if __name__ == '__main__':
-    wnet_file = "wnet0.npz"
-    data_file = "testnet0No17byte.txt"
+    wnet_file = "wnet1.npz"
+    data_file = "testnet0.txt"
     output_file = "output.txt"
     runnet(wnet_file, data_file, output_file)
-    print("done")
