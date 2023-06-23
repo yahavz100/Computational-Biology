@@ -39,5 +39,5 @@ def runnet(wnet_file, data_file, output_file):
 if __name__ == '__main__':
     wnet_file = "wnet1.npz"
     data_file = "testnet1.txt"
-    output_file = "output.txt"
+    output_file = "output1.txt"
     runnet(wnet_file, data_file, output_file)
