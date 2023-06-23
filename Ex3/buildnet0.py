@@ -1,8 +1,8 @@
 import numpy as np
 
-NUM_GENERATIONS = 20
-POPULATION_SIZE = 50
-MUTATION_RATE = 0.05
+NUM_GENERATIONS = 150
+POPULATION_SIZE = 200
+MUTATION_RATE = 0.16
 EARLY_CONVERGE = 0.25
 TRAIN_SIZE = 15000
 
@@ -252,4 +252,3 @@ if __name__ == '__main__':
     best_network = evolve_population(X_train)
 
     save_network(best_network, "wnet0")
-    print("done")
