@@ -1,3 +1,4 @@
+import json
 import numpy as np
 
 
@@ -8,11 +9,12 @@ def sigmoid(x):
 
 def runnet(wnet_file, data_file, output_file):
     # Load the network parameters from the wnet file
-    network_params = np.load(wnet_file)
-    W1 = network_params['W1']
-    b1 = network_params['b1']
-    W2 = network_params['W2']
-    b2 = network_params['b2']
+    with open(wnet_file, 'r') as f:
+        network_params = json.load(f)
+    W1 = np.array(network_params['W1'])
+    b1 = np.array(network_params['b1'])
+    W2 = np.array(network_params['W2'])
+    b2 = np.array(network_params['b2'])
 
     # Load the data from the data file
     with open(data_file, 'r') as file:
@@ -37,7 +39,7 @@ def runnet(wnet_file, data_file, output_file):
 
 
 if __name__ == '__main__':
-    wnet_file = "wnet1.npz"
+    wnet_file = "wnet1.txt"
     data_file = "testnet1.txt"
     output_file = "output1.txt"
     runnet(wnet_file, data_file, output_file)

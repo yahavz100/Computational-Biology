@@ -1,3 +1,4 @@
+import json
 import numpy as np
 
 NUM_GENERATIONS = 150
@@ -232,14 +233,15 @@ def save_network(network, file_path):
 
     # Create a dictionary to store the network parameters
     network_params = {
-        'W1': W1,
-        'b1': b1,
-        'W2': W2,
-        'b2': b2
+        'W1': W1.tolist(),
+        'b1': b1.tolist(),
+        'W2': W2.tolist(),
+        'b2': b2.tolist()
     }
 
-    # Save the network parameters to the file using NumPy's saves function
-    np.savez(file_path, **network_params)
+    # Save the network parameters to the file using JSON
+    with open(file_path, 'w') as f:
+        json.dump(network_params, f)
 
 
 if __name__ == '__main__':
@@ -251,4 +253,4 @@ if __name__ == '__main__':
 
     best_network = evolve_population(X_train)
 
-    save_network(best_network, "wnet1")
+    save_network(best_network, "wnet1.txt")
