@@ -1,9 +1,9 @@
 import json
 import numpy as np
 
-NUM_GENERATIONS = 150
-POPULATION_SIZE = 200
-MUTATION_RATE = 0.16
+NUM_GENERATIONS = 300
+POPULATION_SIZE = 350
+MUTATION_RATE = 0.21
 EARLY_CONVERGE = 0.25
 TRAIN_SIZE = 15000
 
@@ -206,7 +206,7 @@ def initialize_population():
     for _ in range(POPULATION_SIZE):
         # Define the network architecture
         input_size = 16
-        hidden_size = 10
+        hidden_size = 32
         output_size = 1
 
         # Initialize weights and biases
@@ -250,7 +250,7 @@ if __name__ == '__main__':
 
     # Split the data into training and test sets
     X_train, X_test = data[:TRAIN_SIZE], data[TRAIN_SIZE:]
-
     best_network = evolve_population(X_train)
-
+    final_accuracy = calculate_fitness(best_network, X_test)
+    print(final_accuracy)
     save_network(best_network, "wnet0.txt")
